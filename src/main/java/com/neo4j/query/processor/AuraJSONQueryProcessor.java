@@ -109,7 +109,7 @@ public class AuraJSONQueryProcessor implements QueryProcessor {
                 record.dbId = payload.get("dbid").asText();
                 record.authenticatedUser = payload.get("authenticatedUser").asText();
                 record.executedUser = payload.get("executingUser").asText();
-                record.query = payload.has("query")?payload.get("query").asText():"";
+                record.query = payload.has("query")?cleanQuery(payload.get("query").asText()):"";
                 JsonNode o = payload.get("runtime");
                 if (o != null) {
                     record.runtime = o.asText();
@@ -149,5 +149,37 @@ public class AuraJSONQueryProcessor implements QueryProcessor {
         }catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private String cleanQuery(String query) {
+        String modified = query.toLowerCase() ;
+        if( modified.startsWith("cypher ")) {
+            // We need to take out first 2 words.
+//            int index = query.indexOf(' ', 7) ;
+//            int tabIndex = query.indexOf('\t', 7) ;
+//            if( tabIndex > 0 && tabIndex < index ) {
+//                index = tabIndex ;
+//            }
+//            tabIndex = query.indexOf('\n', 7) ;
+//            if( tabIndex > 0 && tabIndex < index ) {
+//                index = tabIndex ;
+//            }
+            int index = findFirstWhiteSpace(query, 7) ;
+            if( index > 0 ) {
+                modified = query.substring(index+1) ;
+                return modified ;
+            }
+        }
+        return query ;
+    }
+    private int findFirstWhiteSpace(String query, int start) {
+        int len = query.length() ;
+        for( int i = start; i < len ; i++ ) {
+            char c = query.charAt(i) ;
+            if( c == ' ' || c == '\t' || c == '\n' ) {
+                return i ;
+            }
+        }
+        return -1 ;
     }
 }
