@@ -14,6 +14,7 @@ public class QueryRecord {
     public long pageFaults ;
     public long pageHits ;
     public long planning ;
+    public long cpuTime ;
     public long waiting ;
     public Timestamp timeStamp ;
     public long allocatedBytes ;

@@ -23,15 +23,9 @@ public class AuraJSONQueryProcessor implements QueryProcessor {
     private Map<String, Object> configuration ;
 
     @Override
-    public void initialize(Map<String, Object> configuration) {
+    public void initialize(Map<String, Object> configuration, IStorageAdapter storageAdapter) {
         this.configuration = configuration ;
-        try {
-            storageAdapter = new SQLiteAdapter();
-            storageAdapter.initialize(configuration);
-            storageAdapter.setupStorage();
-        }catch (Exception e) {
-            e.printStackTrace();
-        }
+        this.storageAdapter = storageAdapter ;
     }
 
     @Override
@@ -101,6 +95,9 @@ public class AuraJSONQueryProcessor implements QueryProcessor {
 
                 record.planning = payload.get("planning").asLong();
                 record.elapsedTimeMs = payload.get("elapsedTimeMs").asLong();
+                if( record.elapsedTimeMs == 0 ) {
+                    record.elapsedTimeMs = 1 ;
+                }
                 record.pageFaults = payload.get("pageFaults").asLong();
                 record.pageHits = payload.get("pageHits").asLong();
                 record.waiting = payload.get("waiting").asLong();
