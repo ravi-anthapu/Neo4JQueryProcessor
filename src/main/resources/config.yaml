@@ -21,6 +21,7 @@ initQueries:
       end_timeStamp DATETIME,
       allocatedBytes INTEGER,
       client varchar(200),
+      server varchar(200),
       PRIMARY KEY(db_query_id,db_transaction_id),
       FOREIGN KEY (query_id) REFERENCES queries (id)
         ON DELETE CASCADE ON UPDATE NO ACTION

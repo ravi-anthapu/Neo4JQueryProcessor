@@ -84,20 +84,6 @@ public class FormatterQueryProcessor implements QueryProcessor {
         String s = null ;
 
         int curPart = 0 ;
-        long transactionId = -1 ;
-        long queryId = -1 ;
-        long elapsedTime = 0 ;
-        long planning = 0 ;
-        long waiting = 0 ;
-        long cpuTime = 0 ;
-        long bytes = 0 ;
-        long pageHits = 0 ;
-        long pageFaults = 0 ;
-        String client = null ;
-        String server = null ;
-        String database = null ;
-        String runtime = null ;
-        String user = null ;
 
         String current = splitData[curPart] ;
         if( current.contains("Query started:") ) {
@@ -186,16 +172,20 @@ public class FormatterQueryProcessor implements QueryProcessor {
 
         if( current.contains("bolt-session")) {
             // Bolt Sesstion.
-            server = getKeyValue(current, "server/", ':') ;
-            client = getKeyValue(current, "client/", ':') ;
+            //record.server = getKeyValue(current, "server/", ':') ;
+            record.client = getKeyValue(current, "client/", ':') ;
             index = current.lastIndexOf(' ') ;
+            if( index == -1 ) {
+                index = current.lastIndexOf('\t') ;
+            }
             if( index != -1 ) {
-                record.dabtabase = current.substring(index) ;
+                record.dabtabase = current.substring(index+1).trim() ;
             }
         }
 
         curPart++ ;
-        user = splitData[curPart] ;
+        record.authenticatedUser = splitData[curPart] ;
+        record.executedUser = splitData[curPart] ;
         curPart++ ;
         // Process the runtime and skip metadata and parameters
         // Also set the last part location.
@@ -203,7 +193,10 @@ public class FormatterQueryProcessor implements QueryProcessor {
         int lastPart ;
         s = splitData[len-2].trim() ;
         if( s.startsWith("runtime=")) {
-            record.runtime = s.substring(8) ;
+            record.runtime = s.substring(8).trim() ;
+            if( record.runtime != null && record.runtime.equals("null")) {
+                record.runtime = null ;
+            }
             lastPart = len - 3 ;
         } else {
             lastPart = len - 2 ;

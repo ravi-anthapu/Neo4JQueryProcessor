@@ -2,7 +2,6 @@ package com.neo4j.query.processor;
 
 import com.neo4j.query.QueryRecord;
 import com.neo4j.query.database.IStorageAdapter;
-import com.neo4j.query.database.SQLiteAdapter;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.JsonParser;
@@ -91,7 +90,10 @@ public class AuraJSONQueryProcessor implements QueryProcessor {
                 }
 
                 record.dbQueryId = payload.get("id").asLong();
-                record.dbTransactionId = payload.get("transactionId").asLong();
+                JsonNode o = payload.get("transactionId") ;
+                if( o != null ) {
+                    record.dbTransactionId = o.asLong();
+                }
 
                 record.planning = payload.get("planning").asLong();
                 record.elapsedTimeMs = payload.get("elapsedTimeMs").asLong();
@@ -107,7 +109,7 @@ public class AuraJSONQueryProcessor implements QueryProcessor {
                 record.authenticatedUser = payload.get("authenticatedUser").asText();
                 record.executedUser = payload.get("executingUser").asText();
                 record.query = payload.has("query")?cleanQuery(payload.get("query").asText()):"";
-                JsonNode o = payload.get("runtime");
+                o = payload.get("runtime");
                 if (o != null) {
                     record.runtime = o.asText();
                 }

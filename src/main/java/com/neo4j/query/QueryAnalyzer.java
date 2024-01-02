@@ -8,6 +8,7 @@ import com.neo4j.query.processor.QueryProcessor;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.Map;
 
@@ -15,13 +16,12 @@ public class QueryAnalyzer {
 
     public void process(String config) {
         Yaml yaml = new Yaml();
-        InputStream inputStream = this.getClass()
-                .getClassLoader()
-                .getResourceAsStream(config);
-        Map<String, Object> configuration = yaml.load(inputStream);
-        QueryProcessor processor = null ;
-        IStorageAdapter storageAdapter = null;
         try {
+            InputStream inputStream = new FileInputStream(config);
+            Map<String, Object> configuration = yaml.load(inputStream);
+            QueryProcessor processor = null ;
+            IStorageAdapter storageAdapter = null;
+
             String processorType = configuration.get("logType").toString() ;
             if( processorType == null || processorType.equals("formatted")) {
                 processor = new FormatterQueryProcessor() ;
@@ -46,7 +46,7 @@ public class QueryAnalyzer {
             }
             processor.finishProcesing();
         }catch (Exception e) {
-
+            e.printStackTrace();
         }
 
     }

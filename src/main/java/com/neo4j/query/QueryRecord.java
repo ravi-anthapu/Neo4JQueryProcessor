@@ -19,6 +19,7 @@ public class QueryRecord {
     public Timestamp timeStamp ;
     public long allocatedBytes ;
     public String client ;
+    public String server ;
     public String query ;
     public String runtime ;
     public boolean isStartRecord ;
