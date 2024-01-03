@@ -70,11 +70,22 @@ public class AuraJSONQueryProcessor implements QueryProcessor {
         QueryRecord record = null ;
 
         try {
-            String timestamp = node.get("timestamp").asText().substring(0, 19).replace('T', ' ');
+
+            String timestamp = null ;
+            if( node.has("timestamp")) {
+                // This is the Aura JSON log format that is exported by support.
+                timestamp = node.get("timestamp").asText().substring(0, 19).replace('T', ' ');
+            } else if( node.has("time")) {
+                // This is the JSON format of query log downloaded by customers.
+                timestamp = node.get("time").asText().substring(0, 19).replace('T', ' ');
+            }
             Timestamp sts = Timestamp.valueOf(timestamp);
+
             JsonNode payload = node;
-            if (payload.has("jsonPayload")) {
+            if( payload.has("jsonPayload")) {
                 payload = node.get("jsonPayload");
+            }
+            if (payload != null ) {
                 record = new QueryRecord();
                 record.timeStamp = sts;
 
@@ -95,14 +106,14 @@ public class AuraJSONQueryProcessor implements QueryProcessor {
                     record.dbTransactionId = o.asLong();
                 }
 
-                record.planning = payload.get("planning").asLong();
+                record.planning = payload.has("planning")?payload.get("planning").asLong():0;
                 record.elapsedTimeMs = payload.get("elapsedTimeMs").asLong();
                 if( record.elapsedTimeMs == 0 ) {
                     record.elapsedTimeMs = 1 ;
                 }
                 record.pageFaults = payload.get("pageFaults").asLong();
                 record.pageHits = payload.get("pageHits").asLong();
-                record.waiting = payload.get("waiting").asLong();
+                record.waiting = payload.has("waiting")?payload.get("waiting").asLong():0;
                 record.allocatedBytes = payload.get("allocatedBytes").asLong();
                 record.dabtabase = payload.get("database").asText();
                 record.dbId = payload.get("dbid").asText();
