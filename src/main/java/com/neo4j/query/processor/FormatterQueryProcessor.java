@@ -172,7 +172,7 @@ public class FormatterQueryProcessor implements QueryProcessor {
 
         if( current.contains("bolt-session")) {
             // Bolt Sesstion.
-            //record.server = getKeyValue(current, "server/", ':') ;
+            record.server = getKeyValue(current, "server/", ':') ;
             record.client = getKeyValue(current, "client/", ':') ;
             index = current.lastIndexOf(' ') ;
             if( index == -1 ) {

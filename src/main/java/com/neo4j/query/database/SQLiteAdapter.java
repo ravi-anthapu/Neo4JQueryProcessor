@@ -102,7 +102,8 @@ public class SQLiteAdapter implements IStorageAdapter {
             addEndRecordStmt.setLong(11,record.planning);
             addEndRecordStmt.setLong(12,record.allocatedBytes);
             addEndRecordStmt.setString(13, record.client);
-            addEndRecordStmt.setTimestamp(14, record.timeStamp);
+            addEndRecordStmt.setString(14, record.server);
+            addEndRecordStmt.setTimestamp(15, record.timeStamp);
             addEndRecordStmt.executeUpdate() ;
         }catch (Exception e) {
             e.printStackTrace();

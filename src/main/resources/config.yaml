@@ -1,6 +1,7 @@
-logType: formatted
+logType: aura
 storeType: sqlite
-queryLocation: "/Users/ravianthapu/Library/Application Support/com.Neo4j.Relate/Data/dbmss/dbms-9dca5dca-4740-4f79-aff4-1e211aa333f9/logs/test/"
+#queryLocation: "/Users/ravianthapu/Library/Application Support/com.Neo4j.Relate/Data/dbmss/dbms-9dca5dca-4740-4f79-aff4-1e211aa333f9/logs/test/"
+queryLocation: "/Users/ravianthapu/Downloads/testlog/"
 databaseURI: jdbc:sqlite:query_db.db
 initQueries:
   - |
@@ -37,15 +38,15 @@ initQueries:
 addStartRecord: |
     INSERT INTO query_execution(db_query_id, db_transaction_id, query_id, database, 
         db_id, authenticatedUser, executedUser, elapsedTimeMs, pageFaults, 
-        pageHits, planning, allocatedBytes, client, start_timeStamp)
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        pageHits, planning, allocatedBytes, client, server, start_timeStamp)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     ON CONFLICT(db_query_id, db_transaction_id) DO UPDATE SET start_timeStamp=excluded.start_timeStamp,planning=excluded.planning;
 
 addEndRecord: |
   INSERT INTO query_execution(db_query_id, db_transaction_id, query_id, database, 
       db_id, authenticatedUser, executedUser, elapsedTimeMs, pageFaults, 
-      pageFaults, pageHits, allocatedBytes, client, end_timeStamp )
-  VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+      pageFaults, pageHits, allocatedBytes, client, server, end_timeStamp )
+  VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
   ON CONFLICT(db_query_id, db_transaction_id) DO UPDATE SET end_timeStamp=excluded.end_timeStamp;
 
 getQueryId:

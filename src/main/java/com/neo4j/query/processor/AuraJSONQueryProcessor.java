@@ -131,8 +131,8 @@ public class AuraJSONQueryProcessor implements QueryProcessor {
                     if( txt.startsWith("embedded-session")) {
                         record.client = txt.trim() ;
                     } else {
-                        int index = txt.indexOf("client");
-                        int endIndex = txt.indexOf("server");
+                        int index = txt.indexOf("client/");
+                        int endIndex = txt.indexOf("server/");
                         if (endIndex == -1 || index == -1) {
                             System.out.println("Txt : " + txt);
                         } else {
@@ -140,6 +140,10 @@ public class AuraJSONQueryProcessor implements QueryProcessor {
                             index = client.indexOf(":");
                             if (index > 0) {
                                 record.client = client.substring(0, index);
+                            }
+                            index = txt.indexOf(":", endIndex+7);
+                            if( index > 0 ) {
+                                record.server = txt.substring(endIndex+7, index);
                             }
                         }
                     }
