@@ -91,7 +91,8 @@ public class AuraJSONQueryProcessor implements QueryProcessor {
 
                 String event = payload.get("event").asText();
                 if( event.equalsIgnoreCase("fail")) {
-                    return null ;
+                    record.failed = 1 ;
+                    record.stackTrace = payload.has("stacktrace")?payload.get("stacktrace").asText():null ;
                 }
 
                 if (event.equalsIgnoreCase("start")) {

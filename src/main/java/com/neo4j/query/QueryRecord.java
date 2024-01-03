@@ -23,4 +23,6 @@ public class QueryRecord {
     public String query ;
     public String runtime ;
     public boolean isStartRecord ;
+    public int failed = 0 ;
+    public String stackTrace ;
 }
