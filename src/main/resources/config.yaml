@@ -2,6 +2,7 @@ logType: aura
 storeType: sqlite
 #queryLocation: "/Users/ravianthapu/Library/Application Support/com.Neo4j.Relate/Data/dbmss/dbms-9dca5dca-4740-4f79-aff4-1e211aa333f9/logs/test/"
 queryLocation: "/Users/ravianthapu/Downloads/testlog/"
+fileFilter: ^query.*\.log$
 databaseURI: jdbc:sqlite:query_db.db
 initQueries:
   - |

@@ -11,12 +11,15 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class QueryAnalyzer {
 
     public void process(String config) {
         Yaml yaml = new Yaml();
         try {
+
             InputStream inputStream = new FileInputStream(config);
             Map<String, Object> configuration = yaml.load(inputStream);
             QueryProcessor processor = null ;
@@ -39,9 +42,23 @@ public class QueryAnalyzer {
             processor.initialize(configuration, storageAdapter);
             String queryDir = configuration.get("queryLocation").toString() ;
 
+            Pattern pattern = null ;
+            if( configuration.containsKey("fileFilter")) {
+                pattern = Pattern.compile(configuration.get("fileFilter").toString()) ;
+            }
+
             File dir = new File(queryDir);
             File[] directoryListing = dir.listFiles();
             for( File f: directoryListing) {
+                if( pattern != null ) {
+                    String name = f.getName();
+                    Matcher matcher = pattern.matcher(name) ;
+                    if(!matcher.find()) {
+                        System.out.println("Ignoring file as does not match the filter : " + name);
+                        continue;
+                    }
+                }
+
                 processor.processFile(f);
             }
             processor.finishProcesing();
