@@ -1,0 +1,55 @@
+initQueries:
+  - |
+    CREATE TABLE IF NOT EXISTS query_execution (
+      db_query_id INTEGER NOT NULL,
+      db_transaction_id INTEGER NOT NULL,
+      query_id INTEGER,
+      database varchar(100),
+      db_id varchar(20),
+      authenticatedUser varchar(100),
+      executedUser varchar(100),
+      elapsedTimeMs INTEGER,
+      pageFaults INTEGER,
+      pageHits INTEGER,
+      planning INTEGER,
+      waiting INTEGER,
+      start_timeStamp DATETIME,
+      end_timeStamp DATETIME,
+      allocatedBytes INTEGER,
+      client varchar(200),
+      server varchar(200),
+      failed INTEGER,
+      stacktrace varchar(4000),
+      query_type INTEGER,
+      PRIMARY KEY(db_query_id,db_transaction_id),
+      FOREIGN KEY (query_id) REFERENCES queries (id)
+        ON DELETE CASCADE ON UPDATE NO ACTION
+    )
+  - |
+    CREATE TABLE IF NOT EXISTS queries (
+      id INTEGER PRIMARY KEY,
+      query varchar(4000) NOT NULL,
+      runtime varchar(20) NOT NULL,
+      write_query INTEGER,
+      UNIQUE(query,runtime)
+    )
+
+addStartRecord: |
+    INSERT INTO query_execution(db_query_id, db_transaction_id, query_id, database, 
+        db_id, authenticatedUser, executedUser, elapsedTimeMs, pageFaults, 
+        pageHits, planning, allocatedBytes, client, server, start_timeStamp, failed, stacktrace)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+    ON CONFLICT(db_query_id, db_transaction_id) DO UPDATE SET start_timeStamp=excluded.start_timeStamp,planning=excluded.planning;
+
+addEndRecord: |
+  INSERT INTO query_execution(db_query_id, db_transaction_id, query_id, database, 
+      db_id, authenticatedUser, executedUser, elapsedTimeMs, pageFaults, 
+      pageFaults, pageHits, allocatedBytes, client, server, end_timeStamp, failed, stacktrace)
+  VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+  ON CONFLICT(db_query_id, db_transaction_id) DO UPDATE SET end_timeStamp=excluded.end_timeStamp;
+
+getQueryId:
+  SELECT id from queries WHERE query= ? AND runtime = ?
+
+insertQuery:
+  INSERT INTO queries (query, runtime) VALUES (?, ?)

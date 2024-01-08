@@ -1,7 +1,9 @@
 package com.neo4j.query.database;
 
 import com.neo4j.query.QueryRecord;
+import org.yaml.snakeyaml.Yaml;
 
+import java.io.InputStream;
 import java.sql.*;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +12,7 @@ public class SQLiteAdapter implements IStorageAdapter {
 
     private  Connection dbConnection ;
     private Map<String, Object> configuration ;
+    private Map<String, Object> dbConfiguration ;
 
     private String getQuerySQL ;
     private String insertQuerySQL ;
@@ -23,16 +26,26 @@ public class SQLiteAdapter implements IStorageAdapter {
     @Override
     public void initialize(Map<String, Object> configuration) throws Exception {
         this.configuration = configuration ;
-        getQuerySQL = configuration.get("getQueryId").toString() ;
-        insertQuerySQL = configuration.get("insertQuery").toString() ;
-        addStartRecordSQL = configuration.get("addStartRecord").toString() ;
-        addEndRecordSQL = configuration.get("addEndRecord").toString() ;
+        Yaml yaml = new Yaml();
+        try {
+            InputStream inputStream = this.getClass()
+                    .getClassLoader()
+                    .getResourceAsStream("sqlite.yaml");
+            dbConfiguration = yaml.load(inputStream);
+
+            getQuerySQL = dbConfiguration.get("getQueryId").toString();
+            insertQuerySQL = dbConfiguration.get("insertQuery").toString();
+            addStartRecordSQL = dbConfiguration.get("addStartRecord").toString();
+            addEndRecordSQL = dbConfiguration.get("addEndRecord").toString();
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
         dbConnection = DriverManager.getConnection(configuration.get("databaseURI").toString()) ;
     }
 
     @Override
     public void setupStorage() {
-        List<Object> initQueries = (List<Object>) configuration.get("initQueries") ;
+        List<Object> initQueries = (List<Object>) dbConfiguration.get("initQueries") ;
         try {
             Statement stmt = dbConnection.createStatement() ;
             for (Object o : initQueries) {
