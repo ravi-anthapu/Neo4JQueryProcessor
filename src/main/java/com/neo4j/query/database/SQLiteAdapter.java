@@ -15,11 +15,13 @@ public class SQLiteAdapter implements IStorageAdapter {
     private Map<String, Object> dbConfiguration ;
 
     private String getQuerySQL ;
+    private String updateQueryRuntimeSQL ;
     private String insertQuerySQL ;
     private String addStartRecordSQL ;
     private String addEndRecordSQL ;
 
     private PreparedStatement getQueryStmt ;
+    private PreparedStatement updateQueryRuntimeStmt ;
     private PreparedStatement insertQueryStmt ;
     private PreparedStatement addStartRecordStmt ;
     private PreparedStatement addEndRecordStmt ;
@@ -34,6 +36,7 @@ public class SQLiteAdapter implements IStorageAdapter {
             dbConfiguration = yaml.load(inputStream);
 
             getQuerySQL = dbConfiguration.get("getQueryId").toString();
+            updateQueryRuntimeSQL = dbConfiguration.get("updateQueryRuntime").toString() ;
             insertQuerySQL = dbConfiguration.get("insertQuery").toString();
             addStartRecordSQL = dbConfiguration.get("addStartRecord").toString();
             addEndRecordSQL = dbConfiguration.get("addEndRecord").toString();
@@ -57,6 +60,7 @@ public class SQLiteAdapter implements IStorageAdapter {
 //            stmt.execute("PRAGMA journal_mode = MEMORY") ;
             stmt.close();
             getQueryStmt = dbConnection.prepareStatement(getQuerySQL);
+            updateQueryRuntimeStmt = dbConnection.prepareStatement(updateQueryRuntimeSQL) ;
             insertQueryStmt = dbConnection.prepareStatement(insertQuerySQL, Statement.RETURN_GENERATED_KEYS);
             addStartRecordStmt = dbConnection.prepareStatement(addStartRecordSQL);
             addEndRecordStmt = dbConnection.prepareStatement(addEndRecordSQL);
@@ -76,7 +80,7 @@ public class SQLiteAdapter implements IStorageAdapter {
     public void addQueryStart(QueryRecord record) {
         try {
             record.queryId = getQueryId(record.query, record.runtime) ;
-
+            setQueryType(record) ;
             addStartRecordStmt.setLong(1,record.dbQueryId);
             addStartRecordStmt.setLong(2,record.dbTransactionId);
             addStartRecordStmt.setLong(3,record.queryId);
@@ -98,6 +102,9 @@ public class SQLiteAdapter implements IStorageAdapter {
                 s = s.substring(0,4000) ;
             }
             addEndRecordStmt.setString(17, s);
+            addEndRecordStmt.setString(18, record.driver);
+            addEndRecordStmt.setString(19, record.driverVersion);
+            addEndRecordStmt.setInt(20, record.queryType);
             addStartRecordStmt.executeUpdate() ;
             addStartRecordStmt.clearParameters();
         }catch (Exception e) {
@@ -109,6 +116,7 @@ public class SQLiteAdapter implements IStorageAdapter {
     public void addQueryEnd(QueryRecord record) {
         try {
             record.queryId = getQueryId(record.query, record.runtime) ;
+            setQueryType(record) ;
             addEndRecordStmt.setLong(1,record.dbQueryId);
             addEndRecordStmt.setLong(2,record.dbTransactionId);
             addEndRecordStmt.setLong(3,record.queryId);
@@ -123,34 +131,80 @@ public class SQLiteAdapter implements IStorageAdapter {
             addEndRecordStmt.setLong(12,record.allocatedBytes);
             addEndRecordStmt.setString(13, record.client);
             addEndRecordStmt.setString(14, record.server);
-            addEndRecordStmt.setTimestamp(15, record.timeStamp);
-            addEndRecordStmt.setInt(16, record.failed);
+            long adjust = ( (record.elapsedTimeMs/1000) + ((record.elapsedTimeMs%1000)>0?1:0) )*1000 ;
+            addEndRecordStmt.setTimestamp(15, new Timestamp(record.timeStamp.getTime()-adjust));
+            addEndRecordStmt.setTimestamp(16, record.timeStamp);
+            addEndRecordStmt.setInt(17, record.failed);
             String s = record.stackTrace ;
             if( s != null && s.length() > 4000 ) {
                 s = s.substring(0,4000) ;
             }
-            addEndRecordStmt.setString(17, s);
+            addEndRecordStmt.setString(18, s);
+            addEndRecordStmt.setString(19, record.driver);
+            addEndRecordStmt.setString(20, record.driverVersion);
+            addEndRecordStmt.setInt(21, record.queryType);
             addEndRecordStmt.executeUpdate() ;
         }catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    private void setQueryType(QueryRecord record) {
+        //CALL dbms.routing.getRoutingTable($routingContext, $databaseName)
+        if( record.query != null && record.query.contains("dbms.")) {
+            if( record.query.contains("dbms.routing") ) {
+                record.queryType = IQueryTypeDefinition.DBMS_ROUTING;
+            } else {
+                record.queryType = IQueryTypeDefinition.DBMS;
+            }
+            return;
+        }
+        if( record.driver != null && record.driver.equalsIgnoreCase("neo4j-browser")) {
+            record.queryType = IQueryTypeDefinition.Browser ;
+        }
+    }
+
     private long getQueryId(String query, String runtime) {
         long qId = -1 ;
         try {
+            String s = query.toLowerCase() ;
+            int writeQuery = 0 ;
+            if( s.contains("create ") || s.contains("merge ") || s.contains("delete ") || s.contains("set ") || s.contains("remove ")) {
+                writeQuery = 1 ;
+            }
+
             getQueryStmt.setString(1,query);
-            getQueryStmt.setString(2, runtime);
+//            getQueryStmt.setString(2, runtime);
+//            getQueryStmt.setString(3, runtime);
             ResultSet qr = getQueryStmt.executeQuery() ;
-            if( qr.next() ) {
+            if ( qr.next() ) {
                 qId = qr.getLong("id") ;
-                return qId ;
+                String dbRuntime = qr.getString("runtime") ;
+                if( dbRuntime == null && runtime != null ) {
+                    // Update runtime if it is null.
+                    try {
+                        updateQueryRuntimeStmt.setString(1, runtime);
+                        updateQueryRuntimeStmt.setLong(2, qId);
+                        updateQueryRuntimeStmt.executeUpdate();
+                        updateQueryRuntimeStmt.clearParameters();
+                    }catch (Exception e) {
+                        // Ignore update failure.
+                        e.printStackTrace();
+                    }
+                }
+                if( dbRuntime != null && runtime != null && !dbRuntime.equals(runtime)) {
+                    qId = -1 ;
+                }
             }
             qr.close();
             getQueryStmt.clearParameters();
+            if( qId != -1 ) {
+                return qId ;
+            }
             // We don't have the query in the database. So insert this query.
             insertQueryStmt.setString(1,query);
             insertQueryStmt.setString(2, runtime);
+            insertQueryStmt.setInt(3, writeQuery);
             insertQueryStmt.executeUpdate() ;
             ResultSet rs = insertQueryStmt.getGeneratedKeys() ;
             rs.next();

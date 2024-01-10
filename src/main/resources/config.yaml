@@ -1,6 +1,9 @@
-logType: aura
+logType: formatted
 storeType: sqlite
-#queryLocation: "/Users/ravianthapu/Library/Application Support/com.Neo4j.Relate/Data/dbmss/dbms-9dca5dca-4740-4f79-aff4-1e211aa333f9/logs/test/"
-queryLocation: "/Users/ravianthapu/Downloads/testlog/"
+queryLocation: "/Users/ravianthapu/Library/Application Support/com.Neo4j.Relate/Data/dbmss/dbms-9dca5dca-4740-4f79-aff4-1e211aa333f9/logs/test/"
+#queryLocation: "/Users/ravianthapu/Downloads/testlog/"
+#queryLocation: "/Users/ravianthapu/Documents/Neo/Customers/Imagine_Learning/analysis/logs/"
 fileFilter: ^query.*\.log$
+#fileFilter: .*\.json$
 databaseURI: jdbc:sqlite:query_db.db
+defaultRuntime: pipelined

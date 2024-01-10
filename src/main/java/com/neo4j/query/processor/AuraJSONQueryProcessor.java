@@ -14,6 +14,7 @@ import java.sql.Timestamp;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Map;
+import java.util.StringTokenizer;
 
 public class AuraJSONQueryProcessor implements QueryProcessor {
     private IStorageAdapter storageAdapter ;
@@ -128,10 +129,12 @@ public class AuraJSONQueryProcessor implements QueryProcessor {
                 o = payload.get("source");
                 if (o != null) {
                     String txt = o.asText();
-                    txt = txt.replaceAll("\\t", " ");
+                    //txt = txt.replaceAll("\\t", " ");
                     if( txt.startsWith("embedded-session")) {
                         record.client = txt.trim() ;
                     } else {
+                        StringTokenizer tokens = new StringTokenizer(txt, "\\\t") ;
+                        /***
                         int index = txt.indexOf("client/");
                         int endIndex = txt.indexOf("server/");
                         if (endIndex == -1 || index == -1) {
@@ -146,6 +149,24 @@ public class AuraJSONQueryProcessor implements QueryProcessor {
                             if( index > 0 ) {
                                 record.server = txt.substring(endIndex+7, index);
                             }
+                        }
+                         ***********/
+                        String session = tokens.nextToken() ;
+                        if( session.equals("bolt-session")) {
+                            tokens.nextToken() ;
+
+                            String driverTxt = tokens.nextToken() ;
+                            int index = driverTxt.indexOf("/") ;
+                            if( index > 0 ) {
+                                record.driver = driverTxt.substring(0,index) ;
+                                record.driverVersion = driverTxt.substring(index+1) ;
+                            }
+//                            String clientTxt = tokens.nextToken() ;
+//                            String serverTxt = tokens.nextToken() ;
+                            record.client = getKeyValue(tokens.nextToken(), "client/", ':') ;
+                            record.server = getKeyValue(tokens.nextToken(), "server/", ':') ;
+                        } else {
+                            System.out.println("Unknown Session : " + txt);
                         }
                     }
                 }
@@ -164,6 +185,22 @@ public class AuraJSONQueryProcessor implements QueryProcessor {
         }catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private String getKeyValue(String part, String key, char delimiter) {
+        String retValue = null ;
+
+        int index = part.indexOf(key) ;
+        if( index != -1 ) {
+            int nextIndex = part.indexOf(delimiter, index+key.length()) ;
+            if( nextIndex > 0 ) {
+                retValue = part.substring(index + key.length(), nextIndex);
+            } else {
+                retValue = part.substring(index + key.length(), part.length());
+            }
+        }
+
+        return retValue ;
     }
 
     private String cleanQuery(String query) {

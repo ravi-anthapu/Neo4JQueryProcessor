@@ -1,5 +1,7 @@
 package com.neo4j.query;
 
+import com.neo4j.query.database.IQueryTypeDefinition;
+
 import java.sql.Timestamp;
 
 public class QueryRecord {
@@ -18,9 +20,12 @@ public class QueryRecord {
     public long waiting ;
     public Timestamp timeStamp ;
     public long allocatedBytes ;
+    public String driver ;
+    public String driverVersion ;
     public String client ;
     public String server ;
     public String query ;
+    public int queryType = IQueryTypeDefinition.APP;
     public String runtime ;
     public boolean isStartRecord ;
     public int failed = 0 ;

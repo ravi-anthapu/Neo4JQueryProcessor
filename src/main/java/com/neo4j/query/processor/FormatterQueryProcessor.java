@@ -10,6 +10,7 @@ import java.sql.Timestamp;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Map;
+import java.util.StringTokenizer;
 
 public class FormatterQueryProcessor implements QueryProcessor {
     private IStorageAdapter storageAdapter ;
@@ -166,22 +167,42 @@ public class FormatterQueryProcessor implements QueryProcessor {
         s = current.substring(index+2,nextIndex) ;
         record.pageFaults = Long.valueOf(s) ;
 
-        // Process Session Data
+        // Process Source Data
         curPart++ ;
         current = splitData[curPart].trim() ;
 
-        if( current.contains("bolt-session")) {
-            // Bolt Sesstion.
-            record.server = getKeyValue(current, "server/", ':') ;
-            record.client = getKeyValue(current, "client/", ':') ;
-            index = current.lastIndexOf(' ') ;
-            if( index == -1 ) {
-                index = current.lastIndexOf('\t') ;
-            }
-            if( index != -1 ) {
-                record.dabtabase = current.substring(index+1).trim() ;
+        if( current.startsWith("embedded-session")) {
+            record.client = current.trim() ;
+        } else {
+            StringTokenizer tokens = new StringTokenizer(current, "\\\t") ;
+            String session = tokens.nextToken() ;
+            if( session.equals("bolt-session")) {
+                tokens.nextToken() ;
+
+                String driverTxt = tokens.nextToken() ;
+                int iindex = driverTxt.indexOf("/") ;
+                if( iindex > 0 ) {
+                    record.driver = driverTxt.substring(0,iindex) ;
+                    record.driverVersion = driverTxt.substring(iindex+1) ;
+                }
+                record.client = getKeyValue(tokens.nextToken(), "client/", ':') ;
+                record.server = getKeyValue(tokens.nextToken(), "server/", ':') ;
+            } else {
+                System.out.println("Unknown Session : " + current);
             }
         }
+//        if( current.contains("bolt-session")) {
+//            // Bolt Sesstion.
+//            record.server = getKeyValue(current, "server/", ':') ;
+//            record.client = getKeyValue(current, "client/", ':') ;
+//            index = current.lastIndexOf(' ') ;
+//            if( index == -1 ) {
+//                index = current.lastIndexOf('\t') ;
+//            }
+//            if( index != -1 ) {
+//                record.dabtabase = current.substring(index+1).trim() ;
+//            }
+//        }
 
         curPart++ ;
         record.authenticatedUser = splitData[curPart] ;
@@ -198,6 +219,11 @@ public class FormatterQueryProcessor implements QueryProcessor {
                 record.runtime = null ;
             }
             lastPart = len - 3 ;
+        } else if(splitData[len-3].trim().startsWith("runtime=")){
+            // We have error at the end.
+            record.stackTrace = splitData[len-1].trim() ;
+            record.failed = 1 ;
+            lastPart = len - 4 ;
         } else {
             lastPart = len - 2 ;
         }
@@ -294,10 +320,10 @@ public class FormatterQueryProcessor implements QueryProcessor {
                     sts = null ;
                 }
                 if( sts != null ) {
-                    System.out.println("Query starts with Time stamp"  + sts);
+                    //System.out.println("Query starts with Time stamp"  + sts);
                     int nextIndex = query.indexOf(' ', index+1) ;
                     s = query.substring(index+1, nextIndex) ;
-                    System.out.println("Next Value : " + s);
+                    //System.out.println("Next Value : " + s);
                     if( s.equals("INFO") || s.equals("ERROR") || s.equals("DEBUG") || s.equals("WARN")) {
                         return true;
                     }

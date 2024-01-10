@@ -20,6 +20,8 @@ initQueries:
       server varchar(200),
       failed INTEGER,
       stacktrace varchar(4000),
+      lang_driver varchar(100),
+      driver_version varchar(100),
       query_type INTEGER,
       PRIMARY KEY(db_query_id,db_transaction_id),
       FOREIGN KEY (query_id) REFERENCES queries (id)
@@ -29,7 +31,7 @@ initQueries:
     CREATE TABLE IF NOT EXISTS queries (
       id INTEGER PRIMARY KEY,
       query varchar(4000) NOT NULL,
-      runtime varchar(20) NOT NULL,
+      runtime varchar(20) ,
       write_query INTEGER,
       UNIQUE(query,runtime)
     )
@@ -37,19 +39,22 @@ initQueries:
 addStartRecord: |
     INSERT INTO query_execution(db_query_id, db_transaction_id, query_id, database, 
         db_id, authenticatedUser, executedUser, elapsedTimeMs, pageFaults, 
-        pageHits, planning, allocatedBytes, client, server, start_timeStamp, failed, stacktrace)
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        pageHits, planning, allocatedBytes, client, server, start_timeStamp, failed, stacktrace, lang_driver, driver_version, query_type)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     ON CONFLICT(db_query_id, db_transaction_id) DO UPDATE SET start_timeStamp=excluded.start_timeStamp,planning=excluded.planning;
 
 addEndRecord: |
   INSERT INTO query_execution(db_query_id, db_transaction_id, query_id, database, 
       db_id, authenticatedUser, executedUser, elapsedTimeMs, pageFaults, 
-      pageFaults, pageHits, allocatedBytes, client, server, end_timeStamp, failed, stacktrace)
-  VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+      pageFaults, pageHits, allocatedBytes, client, server, start_timeStamp, end_timeStamp, failed, stacktrace, lang_driver, driver_version, query_type)
+  VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
   ON CONFLICT(db_query_id, db_transaction_id) DO UPDATE SET end_timeStamp=excluded.end_timeStamp;
 
 getQueryId:
-  SELECT id from queries WHERE query= ? AND runtime = ?
+  SELECT id, runtime from queries WHERE query= ?
+
+updateQueryRuntime:
+  UPDATE queries set runtime=? WHERE id= ?
 
 insertQuery:
-  INSERT INTO queries (query, runtime) VALUES (?, ?)
+  INSERT INTO queries (query, runtime, write_query) VALUES (?, ?, ?)
