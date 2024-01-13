@@ -218,18 +218,25 @@ public class FormatterQueryProcessor implements QueryProcessor {
             if( record.runtime != null && record.runtime.equals("null")) {
                 record.runtime = null ;
             }
-            lastPart = len - 3 ;
+            lastPart = len - 2 ;
         } else if(splitData[len-3].trim().startsWith("runtime=")){
             // We have error at the end.
             record.stackTrace = splitData[len-1].trim() ;
             record.failed = 1 ;
-            lastPart = len - 4 ;
+            lastPart = len - 3 ;
         } else {
-            lastPart = len - 2 ;
+            lastPart = len - 1 ;
+        }
+        // Skip any parameters that have the same pattern as " - "
+        while (true) {
+            if( splitData[lastPart-1].startsWith("{")) {
+                break;
+            }
+            lastPart-- ;
         }
         // Get the Query
         StringBuffer queryStringBuffer = new StringBuffer() ;
-        for( int i = curPart ; i < lastPart ; i++ ) {
+        for( int i = curPart ; i < lastPart-1 ; i++ ) {
             queryStringBuffer.append(splitData[i]) ;
         }
         record.query = queryStringBuffer.toString().trim() ;

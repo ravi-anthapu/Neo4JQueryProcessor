@@ -25,6 +25,7 @@ public class SQLiteAdapter implements IStorageAdapter {
     private PreparedStatement insertQueryStmt ;
     private PreparedStatement addStartRecordStmt ;
     private PreparedStatement addEndRecordStmt ;
+    private int dummyTransactionId = -1 ;
     @Override
     public void initialize(Map<String, Object> configuration) throws Exception {
         this.configuration = configuration ;
@@ -81,6 +82,9 @@ public class SQLiteAdapter implements IStorageAdapter {
         try {
             record.queryId = getQueryId(record.query, record.runtime) ;
             setQueryType(record) ;
+            if( record.dbTransactionId < 0 ) {
+                record.dbTransactionId = dummyTransactionId-- ;
+            }
             addStartRecordStmt.setLong(1,record.dbQueryId);
             addStartRecordStmt.setLong(2,record.dbTransactionId);
             addStartRecordStmt.setLong(3,record.queryId);
@@ -117,6 +121,9 @@ public class SQLiteAdapter implements IStorageAdapter {
         try {
             record.queryId = getQueryId(record.query, record.runtime) ;
             setQueryType(record) ;
+            if( record.dbTransactionId < 0 ) {
+                record.dbTransactionId = dummyTransactionId-- ;
+            }
             addEndRecordStmt.setLong(1,record.dbQueryId);
             addEndRecordStmt.setLong(2,record.dbTransactionId);
             addEndRecordStmt.setLong(3,record.queryId);
