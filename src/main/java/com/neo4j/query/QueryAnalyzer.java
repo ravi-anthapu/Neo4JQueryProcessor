@@ -4,6 +4,7 @@ import com.neo4j.query.database.IStorageAdapter;
 import com.neo4j.query.database.SQLiteAdapter;
 import com.neo4j.query.processor.AuraJSONQueryProcessor;
 import com.neo4j.query.processor.FormatterQueryProcessor;
+import com.neo4j.query.processor.JSONLinesQueryProcessor;
 import com.neo4j.query.processor.QueryProcessor;
 import org.yaml.snakeyaml.Yaml;
 
@@ -30,6 +31,8 @@ public class QueryAnalyzer {
                 processor = new FormatterQueryProcessor() ;
             } else if (processorType.equals("aura")) {
                 processor = new AuraJSONQueryProcessor() ;
+            } else if (processorType.equals("json_lines")) {
+                processor = new JSONLinesQueryProcessor() ;
             }
 
             String storageType = configuration.get("storeType").toString() ;

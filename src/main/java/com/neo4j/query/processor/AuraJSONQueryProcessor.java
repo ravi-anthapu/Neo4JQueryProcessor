@@ -131,7 +131,9 @@ public class AuraJSONQueryProcessor implements QueryProcessor {
                     String txt = o.asText();
                     //txt = txt.replaceAll("\\t", " ");
                     if( txt.startsWith("embedded-session")) {
-                        record.client = txt.trim() ;
+                        record.client = "embedded-session" ;
+                        record.authenticatedUser = txt.substring(16).trim() ;
+                        record.executedUser = record.authenticatedUser;
                     } else {
                         StringTokenizer tokens = new StringTokenizer(txt, "\\\t") ;
                         /***

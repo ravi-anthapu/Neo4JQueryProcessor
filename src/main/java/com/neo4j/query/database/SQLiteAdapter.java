@@ -82,7 +82,7 @@ public class SQLiteAdapter implements IStorageAdapter {
         try {
             record.queryId = getQueryId(record.query, record.runtime) ;
             setQueryType(record) ;
-            if( record.dbTransactionId < 0 ) {
+            if( record.dbTransactionId < 0 && record.dbQueryId == 0 ) {
                 record.dbTransactionId = dummyTransactionId-- ;
             }
             addStartRecordStmt.setLong(1,record.dbQueryId);
@@ -121,7 +121,7 @@ public class SQLiteAdapter implements IStorageAdapter {
         try {
             record.queryId = getQueryId(record.query, record.runtime) ;
             setQueryType(record) ;
-            if( record.dbTransactionId < 0 ) {
+            if( record.dbTransactionId < 0 && record.dbQueryId == 0 ) {
                 record.dbTransactionId = dummyTransactionId-- ;
             }
             addEndRecordStmt.setLong(1,record.dbQueryId);
@@ -180,11 +180,15 @@ public class SQLiteAdapter implements IStorageAdapter {
                 writeQuery = 1 ;
             }
 
+            if( runtime != null && runtime.equals("null")) {
+                runtime = null ;
+            }
+
             getQueryStmt.setString(1,query);
 //            getQueryStmt.setString(2, runtime);
 //            getQueryStmt.setString(3, runtime);
             ResultSet qr = getQueryStmt.executeQuery() ;
-            if ( qr.next() ) {
+            while ( qr.next() ) {
                 qId = qr.getLong("id") ;
                 String dbRuntime = qr.getString("runtime") ;
                 if( dbRuntime == null && runtime != null ) {

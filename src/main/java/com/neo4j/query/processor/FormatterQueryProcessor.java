@@ -172,7 +172,9 @@ public class FormatterQueryProcessor implements QueryProcessor {
         current = splitData[curPart].trim() ;
 
         if( current.startsWith("embedded-session")) {
-            record.client = current.trim() ;
+            record.client = "embedded-session" ;
+            record.authenticatedUser = current.substring(16).trim() ;
+            record.executedUser = record.authenticatedUser;
         } else {
             StringTokenizer tokens = new StringTokenizer(current, "\\\t") ;
             String session = tokens.nextToken() ;
@@ -205,8 +207,11 @@ public class FormatterQueryProcessor implements QueryProcessor {
 //        }
 
         curPart++ ;
-        record.authenticatedUser = splitData[curPart] ;
-        record.executedUser = splitData[curPart] ;
+        if( record.client!= null && !record.client.equals("embedded-session")) {
+            record.authenticatedUser = splitData[curPart] ;
+            record.executedUser = splitData[curPart] ;
+        }
+
         curPart++ ;
         // Process the runtime and skip metadata and parameters
         // Also set the last part location.
