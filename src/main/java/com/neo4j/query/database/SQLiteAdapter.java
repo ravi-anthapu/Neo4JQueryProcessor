@@ -98,17 +98,17 @@ public class SQLiteAdapter implements IStorageAdapter {
             addStartRecordStmt.setLong(11,record.planning);
             addStartRecordStmt.setLong(12,record.allocatedBytes);
             addStartRecordStmt.setString(13, record.client);
-            addEndRecordStmt.setString(14, record.server);
+            addStartRecordStmt.setString(14, record.server);
             addStartRecordStmt.setTimestamp(15, record.timeStamp);
-            addEndRecordStmt.setInt(16, record.failed);
+            addStartRecordStmt.setInt(16, record.failed);
             String s = record.stackTrace ;
             if( s != null && s.length() > 4000 ) {
                 s = s.substring(0,4000) ;
             }
-            addEndRecordStmt.setString(17, s);
-            addEndRecordStmt.setString(18, record.driver);
-            addEndRecordStmt.setString(19, record.driverVersion);
-            addEndRecordStmt.setInt(20, record.queryType);
+            addStartRecordStmt.setString(17, s);
+            addStartRecordStmt.setString(18, record.driver);
+            addStartRecordStmt.setString(19, record.driverVersion);
+            addStartRecordStmt.setInt(20, record.queryType);
             addStartRecordStmt.executeUpdate() ;
             addStartRecordStmt.clearParameters();
         }catch (Exception e) {
@@ -151,6 +151,7 @@ public class SQLiteAdapter implements IStorageAdapter {
             addEndRecordStmt.setString(20, record.driverVersion);
             addEndRecordStmt.setInt(21, record.queryType);
             addEndRecordStmt.executeUpdate() ;
+            addEndRecordStmt.clearParameters();
         }catch (Exception e) {
             e.printStackTrace();
         }
