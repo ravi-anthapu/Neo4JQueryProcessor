@@ -1,9 +1,16 @@
-logType: formatted
+logType: aura
 storeType: sqlite
-queryLocation: "/Users/ravianthapu/Library/Application Support/com.Neo4j.Relate/Data/dbmss/dbms-9dca5dca-4740-4f79-aff4-1e211aa333f9/logs/test/"
+#queryLocation: "/Users/ravianthapu/Library/Application Support/com.Neo4j.Relate/Data/dbmss/dbms-9dca5dca-4740-4f79-aff4-1e211aa333f9/logs/test/"
 #queryLocation: "/Users/ravianthapu/Downloads/testlog/"
+queryLocation: "/Users/ravianthapu/Documents/Neo/Customers/jovens genios/query/"
 #queryLocation: "/Users/ravianthapu/Documents/Neo/Customers/Imagine_Learning/analysis/logs/"
-fileFilter: ^query.*\.log$
+#queryLocation:  "/Users/ravianthapu/Documents/Neo/Customers/Dropbox/logs/2024-01-12/dropbox_ps_neo4j_prod_cc1_core1-2024-01-12_174151/logs/"
+#queryLocation:  "/Users/ravianthapu/Documents/Neo/Customers/GEP/2024-01-02/19-Server/logs/"
+#fileFilter: ^query.*\.log.*$
 #fileFilter: .*\.json$
 databaseURI: jdbc:sqlite:query_db.db
+#databaseURI: jdbc:sqlite:/Users/ravianthapu/Documents/Neo/Customers/Dropbox/logs/2024-01-12/dropbox_ps_neo4j_prod_cc1_core1-2024-01-12_174151/query_db.db
+#databaseURI: jdbc:sqlite:/Users/ravianthapu/Documents/Neo/Customers/GEP/2024-01-02/19-Server/query_db.db
 defaultRuntime: pipelined
+annotationProcessingEnabled: true
+annotaionStorageConfig: sqlite_graphql_v1.yaml

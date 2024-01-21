@@ -4,6 +4,7 @@ import com.neo4j.query.QueryRecord;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.InputStream;
+import java.lang.reflect.Constructor;
 import java.sql.*;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +14,7 @@ public class SQLiteAdapter implements IStorageAdapter {
     private  Connection dbConnection ;
     private Map<String, Object> configuration ;
     private Map<String, Object> dbConfiguration ;
+    private Map<String, Object> annotationConfiguration ;
 
     private String getQuerySQL ;
     private String updateQueryRuntimeSQL ;
@@ -26,6 +28,8 @@ public class SQLiteAdapter implements IStorageAdapter {
     private PreparedStatement addStartRecordStmt ;
     private PreparedStatement addEndRecordStmt ;
     private int dummyTransactionId = -1 ;
+    private IGraphQLStorageAdapterV1 graphQLAnnotationStorage ;
+
     @Override
     public void initialize(Map<String, Object> configuration) throws Exception {
         this.configuration = configuration ;
@@ -36,6 +40,14 @@ public class SQLiteAdapter implements IStorageAdapter {
                     .getResourceAsStream("sqlite.yaml");
             dbConfiguration = yaml.load(inputStream);
 
+            if( configuration.get("annotaionStorageConfig") != null ){
+                InputStream annotationIs = this.getClass()
+                        .getClassLoader()
+                        .getResourceAsStream(configuration.get("annotaionStorageConfig").toString());
+
+                annotationConfiguration = yaml.load(annotationIs);
+            }
+
             getQuerySQL = dbConfiguration.get("getQueryId").toString();
             updateQueryRuntimeSQL = dbConfiguration.get("updateQueryRuntime").toString() ;
             insertQuerySQL = dbConfiguration.get("insertQuery").toString();
@@ -45,6 +57,18 @@ public class SQLiteAdapter implements IStorageAdapter {
             e.printStackTrace();
         }
         dbConnection = DriverManager.getConnection(configuration.get("databaseURI").toString()) ;
+        Object annotationEnabled = configuration.get("annotationProcessingEnabled") ;
+        if( annotationEnabled != null && annotationEnabled.toString().equals("true") && annotationConfiguration != null ) {
+            Object annotationType = annotationConfiguration.get("annotationType") ;
+            Object annotationClass = annotationConfiguration.get("annotationClass") ;
+            if( annotationType != null && annotationType.toString().equals("graphql")) {
+                Class<IGraphQLStorageAdapterV1> adapterClass = (Class<IGraphQLStorageAdapterV1>) Class.forName(annotationClass.toString()) ;
+                Constructor<IGraphQLStorageAdapterV1> ctor = adapterClass.getConstructor();
+                graphQLAnnotationStorage = ctor.newInstance() ;
+                graphQLAnnotationStorage.initialize(annotationConfiguration, dbConnection);
+            }
+        }
+
     }
 
     @Override
@@ -65,6 +89,11 @@ public class SQLiteAdapter implements IStorageAdapter {
             insertQueryStmt = dbConnection.prepareStatement(insertQuerySQL, Statement.RETURN_GENERATED_KEYS);
             addStartRecordStmt = dbConnection.prepareStatement(addStartRecordSQL);
             addEndRecordStmt = dbConnection.prepareStatement(addEndRecordSQL);
+
+            if( graphQLAnnotationStorage != null ) {
+                graphQLAnnotationStorage.setupStorage();
+            }
+
             dbConnection.setAutoCommit(false);
         }catch (Exception e) {
             e.printStackTrace();
@@ -111,6 +140,9 @@ public class SQLiteAdapter implements IStorageAdapter {
             addStartRecordStmt.setInt(20, record.queryType);
             addStartRecordStmt.executeUpdate() ;
             addStartRecordStmt.clearParameters();
+            if( graphQLAnnotationStorage != null ) {
+                graphQLAnnotationStorage.addGraphQLAnnotation(record);
+            }
         }catch (Exception e) {
             e.printStackTrace();
         }
@@ -152,6 +184,9 @@ public class SQLiteAdapter implements IStorageAdapter {
             addEndRecordStmt.setInt(21, record.queryType);
             addEndRecordStmt.executeUpdate() ;
             addEndRecordStmt.clearParameters();
+            if( graphQLAnnotationStorage != null ) {
+                graphQLAnnotationStorage.addGraphQLAnnotation(record);
+            }
         }catch (Exception e) {
             e.printStackTrace();
         }

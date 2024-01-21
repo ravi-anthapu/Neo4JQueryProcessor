@@ -3,6 +3,7 @@ package com.neo4j.query;
 import com.neo4j.query.database.IQueryTypeDefinition;
 
 import java.sql.Timestamp;
+import java.util.Map;
 
 public class QueryRecord {
     public long dbQueryId ;
@@ -30,4 +31,5 @@ public class QueryRecord {
     public boolean isStartRecord ;
     public int failed = 0 ;
     public String stackTrace ;
+    public Map<String, Object> annotationData ;
 }

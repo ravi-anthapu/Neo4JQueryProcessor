@@ -15,10 +15,7 @@ import java.io.FileInputStream;
 import java.io.FileReader;
 import java.sql.Timestamp;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.StringTokenizer;
+import java.util.*;
 
 public class JSONLinesQueryProcessor implements QueryProcessor {
     private IStorageAdapter storageAdapter ;
@@ -87,6 +84,8 @@ public class JSONLinesQueryProcessor implements QueryProcessor {
 
             record = new QueryRecord();
             record.timeStamp = sts;
+
+            readAnnotationData(record, node) ;
 
             String event = node.get("event").toString();
             if( event.equalsIgnoreCase("fail")) {
@@ -185,6 +184,19 @@ public class JSONLinesQueryProcessor implements QueryProcessor {
         }
 
         return retValue ;
+    }
+
+    private void readAnnotationData(QueryRecord record, Map<String, Object> node) {
+        Iterator<String> fields = node.keySet().iterator(); ;
+        if( fields.hasNext() ) {
+            record.annotationData = new HashMap<>() ;
+            while (fields.hasNext()) {
+                String field = fields.next() ;
+                if( field.startsWith("annotationData.")) {
+                    record.annotationData.put(field, node.get(field)) ;
+                }
+            }
+        }
     }
 
     private String cleanQuery(String query) {

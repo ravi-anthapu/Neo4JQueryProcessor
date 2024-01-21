@@ -12,9 +12,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.sql.Timestamp;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
-import java.util.Map;
-import java.util.StringTokenizer;
+import java.util.*;
 
 public class AuraJSONQueryProcessor implements QueryProcessor {
     private IStorageAdapter storageAdapter ;
@@ -89,6 +87,8 @@ public class AuraJSONQueryProcessor implements QueryProcessor {
             if (payload != null ) {
                 record = new QueryRecord();
                 record.timeStamp = sts;
+
+                readAnnotationData(record, payload) ;
 
                 String event = payload.get("event").asText();
                 if( event.equalsIgnoreCase("fail")) {
@@ -189,6 +189,19 @@ public class AuraJSONQueryProcessor implements QueryProcessor {
         }
     }
 
+    private void readAnnotationData(QueryRecord record, JsonNode node) {
+        Iterator<String> fields = node.getFieldNames() ;
+        if( fields.hasNext() ) {
+            record.annotationData = new HashMap<>() ;
+            while (fields.hasNext()) {
+                String field = fields.next() ;
+                if( field.startsWith("annotationData.")) {
+                    record.annotationData.put(field, node.get(field).asText()) ;
+                }
+            }
+        }
+    }
+
     private String getKeyValue(String part, String key, char delimiter) {
         String retValue = null ;
 
@@ -236,4 +249,5 @@ public class AuraJSONQueryProcessor implements QueryProcessor {
         }
         return -1 ;
     }
+
 }
