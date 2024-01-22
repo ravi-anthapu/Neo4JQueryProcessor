@@ -235,14 +235,15 @@ public class FormatterQueryProcessor implements QueryProcessor {
             }
             // Skip any parameters that have the same pattern as " - "
             while (true) {
-                if (lastPart == curPart || splitData[lastPart - 1].startsWith("{")) {
+                if (lastPart == ( curPart+1) || splitData[lastPart - 1].startsWith("{")) {
                     break;
                 }
                 lastPart--;
             }
             // Get the Query
             StringBuffer queryStringBuffer = new StringBuffer();
-            for (int i = curPart; i < lastPart - 1; i++) {
+            queryStringBuffer.append(splitData[curPart]);
+            for (int i = curPart+1; i < lastPart - 1; i++) {
                 queryStringBuffer.append(splitData[i]);
             }
             record.query = queryStringBuffer.toString().trim();
