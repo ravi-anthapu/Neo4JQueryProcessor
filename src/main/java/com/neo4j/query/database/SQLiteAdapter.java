@@ -221,8 +221,6 @@ public class SQLiteAdapter implements IStorageAdapter {
             }
 
             getQueryStmt.setString(1,query);
-//            getQueryStmt.setString(2, runtime);
-//            getQueryStmt.setString(3, runtime);
             ResultSet qr = getQueryStmt.executeQuery() ;
             while ( qr.next() ) {
                 qId = qr.getLong("id") ;
@@ -239,7 +237,12 @@ public class SQLiteAdapter implements IStorageAdapter {
                         e.printStackTrace();
                     }
                 }
-                if( dbRuntime != null && runtime != null && !dbRuntime.equals(runtime)) {
+                if( dbRuntime != null && runtime != null && dbRuntime.equals(runtime) ) {
+                    break ;
+                }
+                if( dbRuntime != null && runtime != null && !( runtime != null && dbRuntime.equals(runtime) ) ) {
+                    // We are setting query id to -1.
+//                    System.out.println("dbRunTime : " + dbRuntime + " :: runTime : " + runtime + " :: Query : " + query);
                     qId = -1 ;
                 }
             }

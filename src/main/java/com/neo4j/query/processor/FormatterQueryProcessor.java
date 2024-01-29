@@ -88,6 +88,12 @@ public class FormatterQueryProcessor implements QueryProcessor {
             record.timeStamp = Timestamp.valueOf(splitData[0].substring(0, 19).replace('T', ' '));
 
             String current = splitData[curPart];
+
+            if( current.contains("Transaction started:") || current.contains("Transaction committed:") || current.contains("Transaction rolled back:") ) {
+                // ignore Transaction statements.
+                return null ;
+            }
+
             if (current.contains("Query started:")) {
                 record.isStartRecord = true;
             } else {
@@ -134,43 +140,58 @@ public class FormatterQueryProcessor implements QueryProcessor {
                 }
             }
 
+            boolean didReadValue = false ;
             s = getKeyValue(current, "planning:", ',');
             if (s != null) {
                 record.planning = Long.valueOf(s.trim());
+                didReadValue = true ;
             }
             s = getKeyValue(current, "cpu:", ',');
             if (s != null) {
                 record.cpuTime = Long.valueOf(s.trim());
+                didReadValue = true ;
             } else {
                 s = getKeyValue(current, "cpu:", ')');
                 if (s != null) {
                     record.cpuTime = Long.valueOf(s.trim());
+                    didReadValue = true ;
                 }
             }
             s = getKeyValue(current, "waiting:", ')');
             if (s != null) {
                 record.waiting = Long.valueOf(s.trim());
+                didReadValue = true ;
             }
 
             // Process Bytes
-            curPart++;
-            current = splitData[curPart].trim();
-            index = current.indexOf(' ');
-            record.allocatedBytes = Long.valueOf(current.substring(0, index));
+            if( didReadValue ) {
+                curPart++;
+                current = splitData[curPart].trim();
+                index = current.indexOf(' ');
+                record.allocatedBytes = Long.valueOf(current.substring(0, index));
+            } else {
+                index = current.indexOf(':');
+                if( index != -1 ) {
+                    s = current.substring(index+1).trim();
+                    record.allocatedBytes = Long.valueOf(s.substring(0, s.length()-2));
+                }
+            }
 
             // Process Page Hits and Page Faults
             curPart++;
             current = splitData[curPart].trim();
-            index = current.indexOf(' ');
-            record.pageHits = Long.valueOf(current.substring(0, index));
-            index = current.indexOf(',');
-            nextIndex = current.indexOf(' ', index + 2);
-            s = current.substring(index + 2, nextIndex);
-            record.pageFaults = Long.valueOf(s);
+            if (!current.startsWith("embedded-session") && !current.startsWith("bolt-session") ) {
+                index = current.indexOf(' ');
+                record.pageHits = Long.valueOf(current.substring(0, index));
+                index = current.indexOf(',');
+                nextIndex = current.indexOf(' ', index + 2);
+                s = current.substring(index + 2, nextIndex);
+                record.pageFaults = Long.valueOf(s);
 
-            // Process Source Data
-            curPart++;
-            current = splitData[curPart].trim();
+                // Process Source Data
+                curPart++;
+                current = splitData[curPart].trim();
+            }
 
             if (current.startsWith("embedded-session")) {
                 record.client = "embedded-session";
