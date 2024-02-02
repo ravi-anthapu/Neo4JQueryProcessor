@@ -16,7 +16,7 @@ You need to provide a configuration yaml to process the data. These are the
 available configurations.
 
 #### logType
-There are 2 available options at this time. They are **aura** and **formatted**.
+There are 3 available options at this time. They are **aura** , **formatted** and **json_lines**.
 
 #### storeType
 This the storage where the query details are written. At this time only **sqlite** is supported value
