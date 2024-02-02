@@ -90,6 +90,10 @@ public class AuraJSONQueryProcessor implements QueryProcessor {
 
                 readAnnotationData(record, payload) ;
 
+                String type = payload.get("type").asText();
+                if( type != null && type.trim().equals("transaction")) {
+                    return null ;
+                }
                 String event = payload.get("event").asText();
                 if( event.equalsIgnoreCase("fail")) {
                     record.failed = 1 ;
