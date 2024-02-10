@@ -6,6 +6,9 @@ import com.neo4j.query.processor.AuraJSONQueryProcessor;
 import com.neo4j.query.processor.FormatterQueryProcessor;
 import com.neo4j.query.processor.JSONLinesQueryProcessor;
 import com.neo4j.query.processor.QueryProcessor;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
@@ -14,6 +17,7 @@ import java.io.InputStream;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.ZipInputStream;
 
 public class QueryAnalyzer {
 
@@ -26,6 +30,11 @@ public class QueryAnalyzer {
             QueryProcessor processor = null ;
             IStorageAdapter storageAdapter = null;
 
+            Object o = configuration.get("fileType") ;
+            String fileType = null ;
+            if( o != null ) {
+                fileType = o.toString() ;
+            }
             String processorType = configuration.get("logType").toString() ;
             if( processorType == null || processorType.equals("formatted")) {
                 processor = new FormatterQueryProcessor() ;
@@ -62,7 +71,31 @@ public class QueryAnalyzer {
                     }
                 }
 
-                processor.processFile(f);
+                try {
+                    if (fileType == null || fileType.equals("file")) {
+                        processor.processFile(f.getAbsolutePath(), new FileInputStream(f));
+                    } else if (fileType.equals("tgz")) {
+                        FileInputStream fis = new FileInputStream(f);
+                        TarArchiveInputStream tarInput =
+                                new TarArchiveInputStream(
+                                        new GzipCompressorInputStream(fis));
+                        TarArchiveEntry currentEntry = tarInput.getNextTarEntry();
+                        while (currentEntry != null) {
+                            processor.processFile(f.getAbsolutePath(), tarInput);
+                            currentEntry = tarInput.getNextTarEntry();
+                        }
+                    } else if (fileType.equals("gzip")) {
+                        FileInputStream fis = new FileInputStream(f);
+                        GzipCompressorInputStream gfis = new GzipCompressorInputStream(fis) ;
+                        processor.processFile(f.getAbsolutePath(), gfis);
+                    } else if (fileType.equals("zip")) {
+                        FileInputStream fis = new FileInputStream(f);
+                        ZipInputStream zis = new ZipInputStream(fis) ;
+                        processor.processFile(f.getAbsolutePath(), zis);
+                    }
+                }catch (Exception ex) {
+                    ex.printStackTrace();
+                }
             }
             processor.finishProcesing();
         }catch (Exception e) {

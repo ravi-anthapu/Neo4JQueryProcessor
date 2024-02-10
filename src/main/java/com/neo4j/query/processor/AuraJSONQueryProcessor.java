@@ -10,6 +10,7 @@ import org.codehaus.jackson.map.MappingJsonFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.InputStream;
 import java.sql.Timestamp;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -27,11 +28,11 @@ public class AuraJSONQueryProcessor implements QueryProcessor {
     }
 
     @Override
-    public void processFile(File file) {
+    public void processFile(String fileName, InputStream is) {
         try {
-            System.out.println("Processing File : " + file.getAbsolutePath());
+            System.out.println("Processing File : " + fileName);
             JsonFactory f = new MappingJsonFactory();
-            FileInputStream fis = new FileInputStream(file);
+            InputStream fis = is;
             JsonParser jp = f.createJsonParser(fis);
             JsonToken current;
             int counter = 0 ;
@@ -45,7 +46,7 @@ public class AuraJSONQueryProcessor implements QueryProcessor {
 //                        System.out.println(file + " :: " + new Date() + " :: index : " + counter);
 //                    }
                     if(counter % 50000 == 0 ) {
-                        System.out.println(file + " :: " + new Date() + " :: index : " + counter);
+                        System.out.println(fileName + " :: " + new Date() + " :: index : " + counter);
                         storageAdapter.commit();
                     }
                     counter++ ;

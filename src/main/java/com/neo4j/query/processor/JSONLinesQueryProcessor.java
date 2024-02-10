@@ -9,10 +9,7 @@ import org.codehaus.jackson.JsonToken;
 import org.codehaus.jackson.map.MappingJsonFactory;
 import org.codehaus.jackson.map.ObjectMapper;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileReader;
+import java.io.*;
 import java.sql.Timestamp;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -30,14 +27,14 @@ public class JSONLinesQueryProcessor implements QueryProcessor {
     }
 
     @Override
-    public void processFile(File file) {
+    public void processFile(String fileName, InputStream is) {
         try {
-            System.out.println("Processing File : " + file.getAbsolutePath());
+            System.out.println("Processing File : " + fileName);
             int counter = 0 ;
 
             ObjectMapper mapper = new ObjectMapper() ;
 
-            BufferedReader reader = new BufferedReader(new FileReader(file)) ;
+            BufferedReader reader = new BufferedReader(new InputStreamReader(is)) ;
             String line = null ;
             line = reader.readLine() ;
             while( line != null ) {
@@ -50,7 +47,7 @@ public class JSONLinesQueryProcessor implements QueryProcessor {
                     continue;
                 }
                 if(counter % 50000 == 0 ) {
-                    System.out.println(file + " :: " + new Date() + " :: index : " + counter);
+                    System.out.println(fileName + " :: " + new Date() + " :: index : " + counter);
                     storageAdapter.commit();
                 }
                 counter++ ;

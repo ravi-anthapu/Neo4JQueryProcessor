@@ -3,9 +3,7 @@ package com.neo4j.query.processor;
 import com.neo4j.query.QueryRecord;
 import com.neo4j.query.database.IStorageAdapter;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
+import java.io.*;
 import java.sql.Timestamp;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
@@ -25,11 +23,11 @@ public class FormatterQueryProcessor implements QueryProcessor {
     }
 
     @Override
-    public void processFile(File file) {
+    public void processFile(String fileName, InputStream is) {
         try {
-            System.out.println("Processing File : " + file.getAbsolutePath());
+            System.out.println("Processing File : " + fileName);
             int counter = 0 ;
-            BufferedReader reader = new BufferedReader(new FileReader(file)) ;
+            BufferedReader reader = new BufferedReader(new InputStreamReader(is)) ;
             StringBuffer query = new StringBuffer() ;
 
             while (true) {
@@ -48,7 +46,7 @@ public class FormatterQueryProcessor implements QueryProcessor {
                                 storageAdapter.addQueryEnd(record);
                             }
                             if (counter % 50000 == 0) {
-                                System.out.println(file + " :: " + new Date() + " :: index : " + counter);
+                                System.out.println(fileName + " :: " + new Date() + " :: index : " + counter);
                                 storageAdapter.commit();
                             }
                             counter++;
