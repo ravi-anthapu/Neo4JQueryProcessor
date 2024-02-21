@@ -41,7 +41,7 @@ addStartRecord: |
         db_id, authenticatedUser, executedUser, elapsedTimeMs, pageFaults, 
         pageHits, planning, allocatedBytes, client, server, start_timeStamp, failed, stacktrace, lang_driver, driver_version, query_type)
     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-    ON CONFLICT(db_query_id, db_transaction_id) DO UPDATE SET start_timeStamp=excluded.start_timeStamp,planning=excluded.planning;
+    ON CONFLICT(db_query_id, db_transaction_id) DO UPDATE SET planning=excluded.planning;
 
 addEndRecord: |
   INSERT INTO query_execution(db_query_id, db_transaction_id, query_id, database, 

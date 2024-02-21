@@ -17,6 +17,7 @@ import java.io.InputStream;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 public class QueryAnalyzer {
@@ -91,7 +92,11 @@ public class QueryAnalyzer {
                     } else if (fileType.equals("zip")) {
                         FileInputStream fis = new FileInputStream(f);
                         ZipInputStream zis = new ZipInputStream(fis) ;
-                        processor.processFile(f.getAbsolutePath(), zis);
+                        ZipEntry currentEntry = null ;
+                        while ( (currentEntry = zis.getNextEntry()) != null) {
+                            processor.processFile(f.getAbsolutePath(), new CustomInputStream(zis));
+//                            zis.closeEntry();
+                        }
                     }
                 }catch (Exception ex) {
                     ex.printStackTrace();
