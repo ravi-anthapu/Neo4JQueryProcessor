@@ -8,15 +8,16 @@ storeType: sqlite
 #queryLocation: "/Users/ravianthapu/Documents/Neo/Customers/Publicis-Marcel/"
 #queryLocation:  "/Users/ravianthapu/Documents/Neo/Customers/Dropbox/logs/2024-01-12/dropbox_ps_neo4j_prod_cc1_core1-2024-01-12_174151/logs/"
 #queryLocation:  "/Users/ravianthapu/Documents/Neo/Customers/GEP/2024-01-02/19-Server/logs/"
-queryLocation: "/Users/ravianthapu/Documents/Neo/Customers/jovens genios/query_log_analysis/2024-02-21/"
+queryLocation: "/Users/ravianthapu/Documents/Neo/Customers/jovens genios/query_log_analysis/2024-02-22/"
 #fileFilter: ^query.*\.log.*$
 #fileFilter: .*\.json$
-fileFilter: .*\.zip
-fileType: zip
+fileFilter: .*\.tgz
+fileType: tgz
 #databaseURI: jdbc:sqlite:query_db.db
 #databaseURI: jdbc:sqlite:/Users/ravianthapu/Documents/Neo/Customers/Publicis-Marcel/query_db.db
 #databaseURI: jdbc:sqlite:/Users/ravianthapu/Documents/Neo/Customers/GEP/2024-01-02/19-Server/query_db.db
-databaseURI: jdbc:sqlite:/Users/ravianthapu/Documents/Neo/Customers/jovens genios/query_log_analysis/2024-02-21/query_dbt.db
+databaseURI: jdbc:sqlite:/Users/ravianthapu/Documents/Neo/Customers/jovens genios/query_log_analysis/2024-02-22/query_db.db
 defaultRuntime: pipelined
 annotationProcessingEnabled: true
 annotaionStorageConfig: sqlite_graphql_v1.yaml
+annotationRecordType: map

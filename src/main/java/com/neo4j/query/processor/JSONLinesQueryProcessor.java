@@ -184,13 +184,35 @@ public class JSONLinesQueryProcessor implements QueryProcessor {
     }
 
     private void readAnnotationData(QueryRecord record, Map<String, Object> node) {
-        Iterator<String> fields = node.keySet().iterator(); ;
-        if( fields.hasNext() ) {
-            record.annotationData = new HashMap<>() ;
-            while (fields.hasNext()) {
-                String field = fields.next() ;
-                if( field.startsWith("annotationData.")) {
-                    record.annotationData.put(field, node.get(field)) ;
+        String type = configuration.get("annotationRecordType") == null ? "flatten" : configuration.get("annotationRecordType").toString()  ;
+
+        if( type.equals("flatten") ) {
+            Iterator<String> fields = node.keySet().iterator();
+            if (fields.hasNext()) {
+                record.annotationData = new HashMap<>();
+                while (fields.hasNext()) {
+                    String field = fields.next();
+                    if (field.startsWith("annotationData.")) {
+                        record.annotationData.put(field, node.get(field).toString());
+                    }
+                }
+            }
+        } else if( type.equals("map") ) {
+            Map<String, Object> n = (Map<String, Object>)node.get("annotationData") ;
+            if( n != null ) {
+                Iterator<String> fields = n.keySet().iterator();
+                if (fields.hasNext()) {
+                    record.annotationData = new HashMap<>();
+                    while (fields.hasNext()) {
+                        String field = fields.next();
+                        if( field.equals("source")) {
+                            Map<String, Object> src = (Map<String, Object>)n.get(field) ;
+                            String query = src.get("query").toString() ;
+                            record.annotationData.put("annotationData.source.query", query);
+                        } else {
+                            record.annotationData.put("annotationData."+field, n.get(field).toString());
+                        }
+                    }
                 }
             }
         }

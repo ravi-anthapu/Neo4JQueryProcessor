@@ -195,17 +195,39 @@ public class AuraJSONQueryProcessor implements QueryProcessor {
     }
 
     private void readAnnotationData(QueryRecord record, JsonNode node) {
-        Iterator<String> fields = node.getFieldNames() ;
-        if( fields.hasNext() ) {
-            record.annotationData = new HashMap<>() ;
-            while (fields.hasNext()) {
-                String field = fields.next() ;
-                if( field.startsWith("annotationData.")) {
-                    record.annotationData.put(field, node.get(field).asText()) ;
+        String type = configuration.get("annotationRecordType") == null ? "flatten" : configuration.get("annotationRecordType").toString()  ;
+
+        if( type.equals("flatten") ) {
+            Iterator<String> fields = node.getFieldNames();
+            if (fields.hasNext()) {
+                record.annotationData = new HashMap<>();
+                while (fields.hasNext()) {
+                    String field = fields.next();
+                    if (field.startsWith("annotationData.")) {
+                        record.annotationData.put(field, node.get(field).asText());
+                    }
+                }
+            }
+        } else if( type.equals("map") ) {
+            JsonNode n = node.get("annotationData") ;
+            if( n != null ) {
+                Iterator<String> fields = n.getFieldNames();
+                if (fields.hasNext()) {
+                    record.annotationData = new HashMap<>();
+                    while (fields.hasNext()) {
+                        String field = fields.next();
+                        if( field.equals("source")) {
+                            JsonNode src = n.get(field) ;
+                            String query = src.get("query").toString() ;
+                            record.annotationData.put("annotationData.source.query", query);
+                        } else {
+                            record.annotationData.put("annotationData."+field, n.get(field).asText());
+                        }
+                    }
                 }
             }
         }
-    }
+     }
 
     private String getKeyValue(String part, String key, char delimiter) {
         String retValue = null ;
