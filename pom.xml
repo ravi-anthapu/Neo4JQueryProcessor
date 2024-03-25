@@ -6,7 +6,7 @@
 
     <groupId>org.example</groupId>
     <artifactId>Neo4JQueryProcessor</artifactId>
-    <version>1.3.0</version>
+    <version>1.4.1</version>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>

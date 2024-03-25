@@ -90,10 +90,24 @@ public class QueryAnalyzer {
                         GzipCompressorInputStream gfis = new GzipCompressorInputStream(fis) ;
                         processor.processFile(f.getAbsolutePath(), gfis);
                     } else if (fileType.equals("zip")) {
+                        Pattern zipFilePattern = null ;
+                        if( configuration.containsKey("zipFileNameFilter")) {
+                            zipFilePattern = Pattern.compile(configuration.get("zipFileNameFilter").toString()) ;
+                        }
+
                         FileInputStream fis = new FileInputStream(f);
                         ZipInputStream zis = new ZipInputStream(fis) ;
                         ZipEntry currentEntry = null ;
                         while ( (currentEntry = zis.getNextEntry()) != null) {
+                            if( zipFilePattern != null ) {
+                                String name = currentEntry.getName() ;
+                                Matcher matcher = zipFilePattern.matcher(name) ;
+                                if(!matcher.find()) {
+                                    System.out.println("Ignoring file as does not match the filter : " + name);
+                                    continue;
+                                }
+                            }
+
                             processor.processFile(f.getAbsolutePath(), new CustomInputStream(zis));
 //                            zis.closeEntry();
                         }

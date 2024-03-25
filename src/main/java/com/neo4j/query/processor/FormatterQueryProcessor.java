@@ -2,19 +2,21 @@ package com.neo4j.query.processor;
 
 import com.neo4j.query.QueryRecord;
 import com.neo4j.query.database.IStorageAdapter;
+import org.codehaus.jackson.JsonParser;
+import org.codehaus.jackson.map.ObjectMapper;
 
 import java.io.*;
 import java.sql.Timestamp;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
-import java.util.Map;
-import java.util.StringTokenizer;
+import java.util.*;
 
 public class FormatterQueryProcessor implements QueryProcessor {
     private IStorageAdapter storageAdapter ;
 
     private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss z");
     private Map<String, Object> configuration ;
+
+    private ObjectMapper mapper = new ObjectMapper() ;
 
     @Override
     public void initialize(Map<String, Object> configuration, IStorageAdapter storageAdapter) {
@@ -25,6 +27,10 @@ public class FormatterQueryProcessor implements QueryProcessor {
     @Override
     public void processFile(String fileName, InputStream is) {
         try {
+            mapper.configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
+            mapper.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
+            mapper.configure(JsonParser.Feature.ALLOW_UNQUOTED_CONTROL_CHARS, true);
+            mapper.configure(JsonParser.Feature.ALLOW_NON_NUMERIC_NUMBERS, true);
             System.out.println("Processing File : " + fileName);
             int counter = 0 ;
             BufferedReader reader = new BufferedReader(new InputStreamReader(is)) ;
@@ -98,83 +104,94 @@ public class FormatterQueryProcessor implements QueryProcessor {
                 record.isStartRecord = false;
             }
             int nextIndex = -1;
-            int index = current.indexOf("transaction id:");
-            if (index > 0) {
-                // First part contais the Transaciton ID. This means we might not have query id.
-                s = getKeyValue(current, "transaction id:", ' ');
-                if (s != null) {
-                    record.dbTransactionId = Long.valueOf(s.trim());
-                } else {
-                    record.dbTransactionId = -1;
-                }
-            } else {
-                // First part foes not contain Transaction id.
-                s = getKeyValue(current, "id:", ' ');
-                if (s != null && !s.trim().equals("")) {
-                    record.dbQueryId = Long.valueOf(s.trim());
-                } else {
-                    record.dbQueryId = -1;
-                }
-            }
-            curPart++;
-            current = splitData[curPart];
-            if (current.contains("transaction id:")) {
-                s = getKeyValue(current, "transaction id:", ' ');
-                if (s != null) {
-                    record.dbTransactionId = Long.valueOf(s.trim());
-                } else {
-                    record.dbTransactionId = -1;
-                }
-                curPart++;
-                current = splitData[curPart];
-            }
-            current = current.trim();
-            index = current.indexOf(' ');
-            if (index > 0) {
-                s = current.substring(0, index).trim();
-                record.elapsedTimeMs = Long.valueOf(s);
+            int index = -1 ;
+            if( current.endsWith(" B") && !current.contains("id:")) {
+                String[] parts = current.split("[ \t]+") ;
+                record.elapsedTimeMs = Long.valueOf(parts[3]);
                 if (record.elapsedTimeMs == 0) {
                     record.elapsedTimeMs = 1;
                 }
-            }
-
-            boolean didReadValue = false ;
-            s = getKeyValue(current, "planning:", ',');
-            if (s != null) {
-                record.planning = Long.valueOf(s.trim());
-                didReadValue = true ;
-            }
-            s = getKeyValue(current, "cpu:", ',');
-            if (s != null) {
-                record.cpuTime = Long.valueOf(s.trim());
-                didReadValue = true ;
+                record.allocatedBytes = Long.valueOf(parts[5]);
+                record.dbTransactionId = -1 ;
+                record.dbQueryId = -1 ;
             } else {
-                s = getKeyValue(current, "cpu:", ')');
+                index = current.indexOf("transaction id:");
+                if (index > 0) {
+                    // First part contais the Transaciton ID. This means we might not have query id.
+                    s = getKeyValue(current, "transaction id:", ' ');
+                    if (s != null) {
+                        record.dbTransactionId = Long.valueOf(s.trim());
+                    } else {
+                        record.dbTransactionId = -1;
+                    }
+                } else {
+                    // First part foes not contain Transaction id.
+                    s = getKeyValue(current, "id:", ' ');
+                    if (s != null && !s.trim().equals("")) {
+                        record.dbQueryId = Long.valueOf(s.trim());
+                    } else {
+                        record.dbQueryId = -1;
+                    }
+                }
+                curPart++;
+                current = splitData[curPart];
+                if (current.contains("transaction id:")) {
+                    s = getKeyValue(current, "transaction id:", ' ');
+                    if (s != null) {
+                        record.dbTransactionId = Long.valueOf(s.trim());
+                    } else {
+                        record.dbTransactionId = -1;
+                    }
+                    curPart++;
+                    current = splitData[curPart];
+                }
+                current = current.trim();
+                index = current.indexOf(' ');
+                if (index > 0) {
+                    s = current.substring(0, index).trim();
+                    record.elapsedTimeMs = Long.valueOf(s);
+                    if (record.elapsedTimeMs == 0) {
+                        record.elapsedTimeMs = 1;
+                    }
+                }
+
+                boolean didReadValue = false;
+                s = getKeyValue(current, "planning:", ',');
+                if (s != null) {
+                    record.planning = Long.valueOf(s.trim());
+                    didReadValue = true;
+                }
+                s = getKeyValue(current, "cpu:", ',');
                 if (s != null) {
                     record.cpuTime = Long.valueOf(s.trim());
-                    didReadValue = true ;
+                    didReadValue = true;
+                } else {
+                    s = getKeyValue(current, "cpu:", ')');
+                    if (s != null) {
+                        record.cpuTime = Long.valueOf(s.trim());
+                        didReadValue = true;
+                    }
+                }
+                s = getKeyValue(current, "waiting:", ')');
+                if (s != null) {
+                    record.waiting = Long.valueOf(s.trim());
+                    didReadValue = true;
+                }
+
+                // Process Bytes
+                if (didReadValue) {
+                    curPart++;
+                    current = splitData[curPart].trim();
+                    index = current.indexOf(' ');
+                    record.allocatedBytes = Long.valueOf(current.substring(0, index));
+                } else {
+                    index = current.indexOf(':');
+                    if (index != -1) {
+                        s = current.substring(index + 1).trim();
+                        record.allocatedBytes = Long.valueOf(s.substring(0, s.length() - 2));
+                    }
                 }
             }
-            s = getKeyValue(current, "waiting:", ')');
-            if (s != null) {
-                record.waiting = Long.valueOf(s.trim());
-                didReadValue = true ;
-            }
-
-            // Process Bytes
-            if( didReadValue ) {
-                curPart++;
-                current = splitData[curPart].trim();
-                index = current.indexOf(' ');
-                record.allocatedBytes = Long.valueOf(current.substring(0, index));
-            } else {
-                index = current.indexOf(':');
-                if( index != -1 ) {
-                    s = current.substring(index+1).trim();
-                    record.allocatedBytes = Long.valueOf(s.substring(0, s.length()-2));
-                }
-            }
-
             // Process Page Hits and Page Faults
             curPart++;
             current = splitData[curPart].trim();
@@ -237,6 +254,13 @@ public class FormatterQueryProcessor implements QueryProcessor {
             // Also set the last part location.
             int len = splitData.length;
             int lastPart;
+            String annotationData = splitData[len - 1].trim();
+            if( !annotationData.startsWith("{")) {
+                annotationData = splitData[len - 2].trim();
+                if( !annotationData.startsWith("{")) {
+                    annotationData = "";
+                }
+            }
             s = splitData[len - 2].trim();
             if (s.startsWith("runtime=")) {
                 record.runtime = s.substring(8).trim();
@@ -267,6 +291,16 @@ public class FormatterQueryProcessor implements QueryProcessor {
             }
             record.query = queryStringBuffer.toString().trim();
 
+//            if( !annotationData.equals("")) {
+////                String escaped = annotationData.replaceAll("(\\r|\\n|\\r\\n)+", "\\\\n") ;
+////                Map<String, Object> data = mapper.readValue(annotationData, HashMap.class) ;
+//                Map<String, Object> data = parseAnnotationData(annotationData) ;
+//                try {
+//                    readAnnotationData(record, data);
+//                }catch (Exception ex) {
+//                    ex.printStackTrace();
+//                }
+//            }
             return record;
         }catch (Exception e) {
             e.printStackTrace();
@@ -274,6 +308,74 @@ public class FormatterQueryProcessor implements QueryProcessor {
         }
     }
 
+    private void readAnnotationData(QueryRecord record, Map<String, Object> node) {
+        String type = configuration.get("annotationRecordType") == null ? "flatten" : configuration.get("annotationRecordType").toString()  ;
+
+        if( type.equals("flatten") ) {
+            Iterator<String> fields = node.keySet().iterator();
+            if (fields.hasNext()) {
+                record.annotationData = new HashMap<>();
+                while (fields.hasNext()) {
+                    String field = fields.next();
+                    if (field.startsWith("annotationData.")) {
+                        record.annotationData.put(field, node.get(field).toString());
+                    }
+                }
+            }
+        } else if( type.equals("map") ) {
+            Map<String, Object> n = node ;
+            if( n != null ) {
+                Iterator<String> fields = n.keySet().iterator();
+                if (fields.hasNext()) {
+                    record.annotationData = new HashMap<>();
+                    while (fields.hasNext()) {
+                        String field = fields.next();
+                        if( field.equals("source")) {
+                            Map<String, Object> src = (Map<String, Object>)n.get(field) ;
+                            String query = src.get("query").toString() ;
+                            record.annotationData.put("annotationData.source.query", query);
+                        } else {
+                            record.annotationData.put("annotationData."+field, n.get(field).toString());
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+    private Map<String, Object> parseAnnotationData(String data) {
+        Map<String, Object> values = new HashMap<>() ;
+        String key = null ;
+        String value = null ;
+        data = data.substring(1, data.length()-1) ;
+        String[] parts = data.split(":") ;
+        int index = 0 ;
+        for(String s: parts ) {
+            s = s.trim() ;
+            if( index == 0 ) {
+                key = s ;
+            } else {
+                int nextKeyIndex = s.lastIndexOf(',') ;
+                value = s.substring(0, nextKeyIndex!=-1?nextKeyIndex:s.length()) ;
+                if( value.startsWith("'") && value.startsWith("'") ) {
+                    value = value.substring(1, value.length()-1) ;
+                }
+                if( value.startsWith("\"") && value.startsWith("\"") ) {
+                    value = value.substring(1, value.length()-1) ;
+                }
+                values.put(key, value) ;
+                if( nextKeyIndex != -1 ) {
+                    key = s.substring(nextKeyIndex+1, s.length()).trim() ;
+                } else {
+                    key = null ;
+                }
+            }
+            index++ ;
+        }
+
+        return values ;
+    }
 
     public void finishProcesing() {
         try {

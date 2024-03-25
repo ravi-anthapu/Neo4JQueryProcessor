@@ -113,6 +113,8 @@ public class SQLiteAdapter implements IStorageAdapter {
             setQueryType(record) ;
             if( record.dbTransactionId < 0 && record.dbQueryId == 0 ) {
                 record.dbTransactionId = dummyTransactionId-- ;
+            } else if( record.dbQueryId == -1 && record.dbTransactionId == -1 ) {
+                record.dbTransactionId = dummyTransactionId-- ;
             }
             addStartRecordStmt.setLong(1,record.dbQueryId);
             addStartRecordStmt.setLong(2,record.dbTransactionId);
@@ -154,6 +156,8 @@ public class SQLiteAdapter implements IStorageAdapter {
             record.queryId = getQueryId(record.query, record.runtime) ;
             setQueryType(record) ;
             if( record.dbTransactionId < 0 && record.dbQueryId == 0 ) {
+                record.dbTransactionId = dummyTransactionId-- ;
+            } else if( record.dbQueryId == -1 && record.dbTransactionId == -1 ) {
                 record.dbTransactionId = dummyTransactionId-- ;
             }
             addEndRecordStmt.setLong(1,record.dbQueryId);

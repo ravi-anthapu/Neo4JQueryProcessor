@@ -21,7 +21,7 @@ initQueries:
     CREATE TABLE IF NOT EXISTS graphql_queries (
       id INTEGER PRIMARY KEY,
       app varchar(40),
-      query varchar(4000) NOT NULL,
+      query varchar(8000) NOT NULL,
       UNIQUE(query, app)
     )
 

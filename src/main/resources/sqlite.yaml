@@ -30,7 +30,7 @@ initQueries:
   - |
     CREATE TABLE IF NOT EXISTS queries (
       id INTEGER PRIMARY KEY,
-      query varchar(4000) NOT NULL,
+      query varchar(8000) NOT NULL,
       runtime varchar(20) ,
       write_query INTEGER,
       UNIQUE(query,runtime)
