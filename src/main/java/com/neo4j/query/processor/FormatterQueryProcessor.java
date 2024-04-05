@@ -106,6 +106,7 @@ public class FormatterQueryProcessor implements QueryProcessor {
             int nextIndex = -1;
             int index = -1 ;
             if( current.endsWith(" B") && !current.contains("id:")) {
+                // This format does not have query or transaction id and ends with bytes.
                 String[] parts = current.split("[ \t]+") ;
                 record.elapsedTimeMs = Long.valueOf(parts[3]);
                 if (record.elapsedTimeMs == 0) {
@@ -114,45 +115,15 @@ public class FormatterQueryProcessor implements QueryProcessor {
                 record.allocatedBytes = Long.valueOf(parts[5]);
                 record.dbTransactionId = -1 ;
                 record.dbQueryId = -1 ;
-            } else {
-                index = current.indexOf("transaction id:");
-                if (index > 0) {
-                    // First part contais the Transaciton ID. This means we might not have query id.
-                    s = getKeyValue(current, "transaction id:", ' ');
-                    if (s != null) {
-                        record.dbTransactionId = Long.valueOf(s.trim());
-                    } else {
-                        record.dbTransactionId = -1;
-                    }
-                } else {
-                    // First part foes not contain Transaction id.
-                    s = getKeyValue(current, "id:", ' ');
-                    if (s != null && !s.trim().equals("")) {
-                        record.dbQueryId = Long.valueOf(s.trim());
-                    } else {
-                        record.dbQueryId = -1;
-                    }
-                }
-                curPart++;
-                current = splitData[curPart];
-                if (current.contains("transaction id:")) {
-                    s = getKeyValue(current, "transaction id:", ' ');
-                    if (s != null) {
-                        record.dbTransactionId = Long.valueOf(s.trim());
-                    } else {
-                        record.dbTransactionId = -1;
-                    }
-                    curPart++;
-                    current = splitData[curPart];
-                }
-                current = current.trim();
-                index = current.indexOf(' ');
-                if (index > 0) {
-                    s = current.substring(0, index).trim();
-                    record.elapsedTimeMs = Long.valueOf(s);
-                    if (record.elapsedTimeMs == 0) {
-                        record.elapsedTimeMs = 1;
-                    }
+            } else if (!current.contains("id:")) {
+                // This format does not have query or transaction id and may have planning details.
+                record.dbTransactionId = -1 ;
+                record.dbQueryId = -1 ;
+
+                String[] parts = current.split("[ \t]+") ;
+                record.elapsedTimeMs = Long.valueOf(parts[3]);
+                if (record.elapsedTimeMs == 0) {
+                    record.elapsedTimeMs = 1;
                 }
 
                 boolean didReadValue = false;
@@ -161,37 +132,97 @@ public class FormatterQueryProcessor implements QueryProcessor {
                     record.planning = Long.valueOf(s.trim());
                     didReadValue = true;
                 }
-                s = getKeyValue(current, "cpu:", ',');
-                if (s != null) {
-                    record.cpuTime = Long.valueOf(s.trim());
-                    didReadValue = true;
-                } else {
-                    s = getKeyValue(current, "cpu:", ')');
-                    if (s != null) {
-                        record.cpuTime = Long.valueOf(s.trim());
-                        didReadValue = true;
-                    }
-                }
                 s = getKeyValue(current, "waiting:", ')');
                 if (s != null) {
                     record.waiting = Long.valueOf(s.trim());
                     didReadValue = true;
                 }
-
                 // Process Bytes
                 if (didReadValue) {
                     curPart++;
                     current = splitData[curPart].trim();
                     index = current.indexOf(' ');
                     record.allocatedBytes = Long.valueOf(current.substring(0, index));
-                } else {
-                    index = current.indexOf(':');
-                    if (index != -1) {
-                        s = current.substring(index + 1).trim();
-                        record.allocatedBytes = Long.valueOf(s.substring(0, s.length() - 2));
+                }
+            } else {
+                    index = current.indexOf("transaction id:");
+                    if (index > 0) {
+                        // First part contais the Transaciton ID. This means we might not have query id.
+                        s = getKeyValue(current, "transaction id:", ' ');
+                        if (s != null) {
+                            record.dbTransactionId = Long.valueOf(s.trim());
+                        } else {
+                            record.dbTransactionId = -1;
+                        }
+                    } else {
+                        // First part foes not contain Transaction id.
+                        s = getKeyValue(current, "id:", ' ');
+                        if (s != null && !s.trim().equals("")) {
+                            record.dbQueryId = Long.valueOf(s.trim());
+                        } else {
+                            record.dbQueryId = -1;
+                        }
+                    }
+                    curPart++;
+                    current = splitData[curPart];
+                    if (current.contains("transaction id:")) {
+                        s = getKeyValue(current, "transaction id:", ' ');
+                        if (s != null) {
+                            record.dbTransactionId = Long.valueOf(s.trim());
+                        } else {
+                            record.dbTransactionId = -1;
+                        }
+                        curPart++;
+                        current = splitData[curPart];
+                    }
+                    current = current.trim();
+                    index = current.indexOf(' ');
+                    if (index > 0) {
+                        s = current.substring(0, index).trim();
+                        record.elapsedTimeMs = Long.valueOf(s);
+                        if (record.elapsedTimeMs == 0) {
+                            record.elapsedTimeMs = 1;
+                        }
+                    }
+
+                    boolean didReadValue = false;
+                    s = getKeyValue(current, "planning:", ',');
+                    if (s != null) {
+                        record.planning = Long.valueOf(s.trim());
+                        didReadValue = true;
+                    }
+                    s = getKeyValue(current, "cpu:", ',');
+                    if (s != null) {
+                        record.cpuTime = Long.valueOf(s.trim());
+                        didReadValue = true;
+                    } else {
+                        s = getKeyValue(current, "cpu:", ')');
+                        if (s != null) {
+                            record.cpuTime = Long.valueOf(s.trim());
+                            didReadValue = true;
+                        }
+                    }
+                    s = getKeyValue(current, "waiting:", ')');
+                    if (s != null) {
+                        record.waiting = Long.valueOf(s.trim());
+                        didReadValue = true;
+                    }
+
+                    // Process Bytes
+                    if (didReadValue) {
+                        curPart++;
+                        current = splitData[curPart].trim();
+                        index = current.indexOf(' ');
+                        record.allocatedBytes = Long.valueOf(current.substring(0, index));
+                    } else {
+                        index = current.indexOf(':');
+                        if (index != -1) {
+                            s = current.substring(index + 1).trim();
+                            record.allocatedBytes = Long.valueOf(s.substring(0, s.length() - 2));
+                        }
                     }
                 }
-            }
+
             // Process Page Hits and Page Faults
             curPart++;
             current = splitData[curPart].trim();
