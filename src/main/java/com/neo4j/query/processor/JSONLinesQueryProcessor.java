@@ -69,9 +69,22 @@ public class JSONLinesQueryProcessor implements QueryProcessor {
 
             String timestamp = null ;
 
-            // This is the JSON format of query log downloaded by customers.
-            timestamp = node.get("time").toString().substring(0, 19).replace('T', ' ');
+            if( node.containsKey("jsonPayload")) {
+                // This is Aura log files downloaded as json lines.
+                if( node.containsKey("timestamp")) {
+                    // This is the Aura JSON log format that is exported by support.
+                    timestamp = node.get("timestamp").toString().substring(0, 19).replace('T', ' ');
+                } else if( node.containsKey("time")) {
+                    // This is the JSON format of query log downloaded by customers.
+                    timestamp = node.get("time").toString().substring(0, 19).replace('T', ' ');
+                }
 
+                node = (Map<String, Object>) node.get("jsonPayload") ;
+
+            } else {
+                // This is the JSON format of query log downloaded by customers.
+                timestamp = node.get("time").toString().substring(0, 19).replace('T', ' ');
+            }
             Timestamp sts = Timestamp.valueOf(timestamp);
 
             record = new QueryRecord();
@@ -95,21 +108,34 @@ public class JSONLinesQueryProcessor implements QueryProcessor {
             Object o = node.get("transactionId") ;
             if( o != null ) {
                 record.dbTransactionId = Long.valueOf(o.toString());
+            } else {
+                o = node.get("transactionid") ;
+                if( o != null ) {
+                    record.dbTransactionId = Long.valueOf(o.toString());
+                }
             }
 
             record.planning = node.containsKey("planning")?(Integer)node.get("planning"):0;
-            record.elapsedTimeMs = (Integer) node.get("elapsedTimeMs");
+            Object tempKey = node.containsKey("elapsedTimeMs")?node.get("elapsedTimeMs"):node.get("elapsedtimems") ;
+            record.elapsedTimeMs = (Integer) tempKey;
+
             if( record.elapsedTimeMs == 0 ) {
                 record.elapsedTimeMs = 1 ;
             }
-            record.pageFaults = (Integer)node.get("pageFaults") ;
-            record.pageHits = (Integer)node.get("pageHits") ;
+
+            tempKey = node.containsKey("pageFaults")?node.get("pageFaults"):node.get("pagefaults") ;
+            record.pageFaults = (Integer)tempKey ;
+            tempKey = node.containsKey("pageHits")?node.get("pageHits"):node.get("pagehits") ;
+            record.pageHits = (Integer)tempKey ;
             record.waiting = node.containsKey("waiting")?(Integer)node.get("waiting"):0;
-            record.allocatedBytes = Long.valueOf(node.get("allocatedBytes").toString());
+            tempKey = node.containsKey("allocatedBytes")?node.get("allocatedBytes"):node.get("allocatedbytes") ;
+            record.allocatedBytes = Long.valueOf(tempKey.toString());
             record.dabtabase = node.get("database").toString();
 //            record.dbId = node.get("dbid").toString();
-            record.authenticatedUser = node.get("authenticatedUser").toString();
-            record.executedUser = node.get("executingUser").toString();
+            tempKey = node.containsKey("authenticatedUser")?node.get("authenticatedUser"):node.get("authenticateduser") ;
+            record.authenticatedUser = tempKey.toString();
+            tempKey = node.containsKey("executingUser")?node.get("executingUser"):node.get("executinguser") ;
+            record.executedUser = tempKey.toString();
             record.query = node.containsKey("query")?cleanQuery(node.get("query").toString()):"";
             o = node.get("runtime");
             if (o != null) {
@@ -187,13 +213,17 @@ public class JSONLinesQueryProcessor implements QueryProcessor {
                 record.annotationData = new HashMap<>();
                 while (fields.hasNext()) {
                     String field = fields.next();
-                    if (field.startsWith("annotationData.")) {
-                        record.annotationData.put(field, node.get(field).toString());
+                    if (field.startsWith("annotationData.") || field.startsWith("annotationdata.")) {
+
+                        record.annotationData.put(field.replace("annotationdata.", "annotationData."), node.get(field).toString());
                     }
                 }
             }
         } else if( type.equals("map") ) {
             Map<String, Object> n = (Map<String, Object>)node.get("annotationData") ;
+            if( n == null ) {
+                n = (Map<String, Object>)node.get("annotationdata") ;
+            }
             if( n != null ) {
                 Iterator<String> fields = n.keySet().iterator();
                 if (fields.hasNext()) {
