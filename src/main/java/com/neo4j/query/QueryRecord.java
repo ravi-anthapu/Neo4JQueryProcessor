@@ -32,4 +32,6 @@ public class QueryRecord {
     public int failed = 0 ;
     public String stackTrace ;
     public Map<String, Object> annotationData ;
+
+    public String serverHostName ;
 }

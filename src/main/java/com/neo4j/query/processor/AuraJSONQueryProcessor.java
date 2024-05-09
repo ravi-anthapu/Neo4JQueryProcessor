@@ -21,10 +21,16 @@ public class AuraJSONQueryProcessor implements QueryProcessor {
     private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss z");
     private Map<String, Object> configuration ;
 
+    private String serverHostNameKeys ;
+
+    private String dbIdFilter ;
+
     @Override
     public void initialize(Map<String, Object> configuration, IStorageAdapter storageAdapter) {
         this.configuration = configuration ;
         this.storageAdapter = storageAdapter ;
+        this.serverHostNameKeys = (String) configuration.get("server_host_name") ;
+        this.dbIdFilter = (String) configuration.get("dbid") ;
     }
 
     @Override
@@ -52,12 +58,12 @@ public class AuraJSONQueryProcessor implements QueryProcessor {
                     counter++ ;
                     JsonNode node = jp.readValueAsTree();
                     QueryRecord record = readQueryLogEntry(node) ;
-                    if( record == null )
-                        continue;
-                    if( record.isStartRecord ) {
-                        storageAdapter.addQueryStart(record);
-                    } else {
-                        storageAdapter.addQueryEnd(record);
+                    if( record != null ) {
+                        if (record.isStartRecord) {
+                            storageAdapter.addQueryStart(record);
+                        } else {
+                            storageAdapter.addQueryEnd(record);
+                        }
                     }
                 }
             }

@@ -18,6 +18,7 @@ initQueries:
       allocatedBytes INTEGER,
       client varchar(200),
       server varchar(200),
+      server_hostname varchar(200),
       failed INTEGER,
       stacktrace varchar(4000),
       lang_driver varchar(100),
@@ -35,19 +36,22 @@ initQueries:
       write_query INTEGER,
       UNIQUE(query,runtime)
     )
+  - |
+    CREATE INDEX IF NOT EXISTS idx_queries_query 
+    ON queries (query)
 
 addStartRecord: |
     INSERT INTO query_execution(db_query_id, db_transaction_id, query_id, database, 
         db_id, authenticatedUser, executedUser, elapsedTimeMs, pageFaults, 
-        pageHits, planning, allocatedBytes, client, server, start_timeStamp, failed, stacktrace, lang_driver, driver_version, query_type)
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        pageHits, planning, allocatedBytes, client, server, start_timeStamp, failed, stacktrace, lang_driver, driver_version, query_type, server_hostname)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     ON CONFLICT(db_query_id, db_transaction_id) DO UPDATE SET planning=excluded.planning;
 
 addEndRecord: |
   INSERT INTO query_execution(db_query_id, db_transaction_id, query_id, database, 
       db_id, authenticatedUser, executedUser, elapsedTimeMs, pageFaults, 
-      pageHits, planning, allocatedBytes, client, server, start_timeStamp, end_timeStamp, failed, stacktrace, lang_driver, driver_version, query_type)
-  VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+      pageHits, planning, allocatedBytes, client, server, start_timeStamp, end_timeStamp, failed, stacktrace, lang_driver, driver_version, query_type, server_hostname)
+  VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
   ON CONFLICT(db_query_id, db_transaction_id) DO UPDATE 
     SET end_timeStamp=excluded.end_timeStamp, 
         query_id=excluded.query_id, 

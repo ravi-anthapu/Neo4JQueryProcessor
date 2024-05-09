@@ -15,10 +15,16 @@ public class JSONLinesQueryProcessor implements QueryProcessor {
     private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss z");
     private Map<String, Object> configuration ;
 
+    private String serverHostNameKeys ;
+
+    private String dbIdFilter ;
+
     @Override
     public void initialize(Map<String, Object> configuration, IStorageAdapter storageAdapter) {
         this.configuration = configuration ;
         this.storageAdapter = storageAdapter ;
+        this.serverHostNameKeys = (String) configuration.get("server_host_name") ;
+        this.dbIdFilter = (String) configuration.get("dbid") ;
     }
 
     @Override
@@ -48,12 +54,12 @@ public class JSONLinesQueryProcessor implements QueryProcessor {
                 counter++ ;
 
                 QueryRecord record = readQueryLogEntry(data) ;
-                if( record == null )
-                    continue;
-                if( record.isStartRecord ) {
-                    storageAdapter.addQueryStart(record);
-                } else {
-                    storageAdapter.addQueryEnd(record);
+                if( record != null ) {
+                    if (record.isStartRecord) {
+                        storageAdapter.addQueryStart(record);
+                    } else {
+                        storageAdapter.addQueryEnd(record);
+                    }
                 }
                 line = reader.readLine() ;
             }
@@ -68,7 +74,23 @@ public class JSONLinesQueryProcessor implements QueryProcessor {
         try {
 
             String timestamp = null ;
-
+            String serverName = null ;
+            if( serverHostNameKeys != null ) {
+                String[] keysSequence = serverHostNameKeys.split("::") ;
+                Map<String, Object> curMap = node ;
+                for( int i = 0 ; i < keysSequence.length-1 ; i++ ) {
+                    if( curMap != null && curMap.containsKey(keysSequence[i])) {
+                        curMap = (Map<String, Object>) curMap.get(keysSequence[i]) ;
+                    } else {
+                        curMap = null ;
+                    }
+                }
+                if( curMap != null ) {
+                    if( curMap.containsKey(keysSequence[keysSequence.length-1])) {
+                        serverName = curMap.get(keysSequence[keysSequence.length-1]).toString() ;
+                    }
+                }
+            }
             if( node.containsKey("jsonPayload")) {
                 // This is Aura log files downloaded as json lines.
                 if( node.containsKey("timestamp")) {
@@ -87,7 +109,17 @@ public class JSONLinesQueryProcessor implements QueryProcessor {
             }
             Timestamp sts = Timestamp.valueOf(timestamp);
 
+            String dbId = node.containsKey("dbid")?node.get("dbid").toString():null;
+            if( dbIdFilter != null && dbId != null ) {
+                if( !dbIdFilter.equals(dbId)) {
+                    // We don't want this database query logs.
+                    return  null ;
+                }
+            }
+
             record = new QueryRecord();
+            record.dbId = dbId ;
+            record.serverHostName = serverName ;
             record.timeStamp = sts;
 
             readAnnotationData(record, node) ;
@@ -131,7 +163,6 @@ public class JSONLinesQueryProcessor implements QueryProcessor {
             tempKey = node.containsKey("allocatedBytes")?node.get("allocatedBytes"):node.get("allocatedbytes") ;
             record.allocatedBytes = Long.valueOf(tempKey.toString());
             record.dabtabase = node.get("database").toString();
-//            record.dbId = node.get("dbid").toString();
             tempKey = node.containsKey("authenticatedUser")?node.get("authenticatedUser"):node.get("authenticateduser") ;
             record.authenticatedUser = tempKey.toString();
             tempKey = node.containsKey("executingUser")?node.get("executingUser"):node.get("executinguser") ;

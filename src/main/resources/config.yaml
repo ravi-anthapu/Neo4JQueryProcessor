@@ -11,3 +11,5 @@ defaultRuntime: pipelined
 #annotationProcessingEnabled: true
 #annotaionStorageConfig: sqlite_graphql_v1.yaml
 #annotationRecordType: map
+#server_host_name: resource::labels::node_name
+#dbid: 9be64e6e
