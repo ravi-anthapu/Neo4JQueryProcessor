@@ -24,7 +24,7 @@ initQueries:
       lang_driver varchar(100),
       driver_version varchar(100),
       query_type INTEGER,
-      PRIMARY KEY(db_query_id,db_transaction_id),
+      PRIMARY KEY(db_query_id,db_transaction_id, server),
       FOREIGN KEY (query_id) REFERENCES queries (id)
         ON DELETE CASCADE ON UPDATE NO ACTION
     )
@@ -43,16 +43,16 @@ initQueries:
 addStartRecord: |
     INSERT INTO query_execution(db_query_id, db_transaction_id, query_id, database, 
         db_id, authenticatedUser, executedUser, elapsedTimeMs, pageFaults, 
-        pageHits, planning, allocatedBytes, client, server, start_timeStamp, failed, stacktrace, lang_driver, driver_version, query_type, server_hostname)
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-    ON CONFLICT(db_query_id, db_transaction_id) DO UPDATE SET planning=excluded.planning;
+        pageHits, planning, allocatedBytes, client, server, start_timeStamp, failed, stacktrace, lang_driver, driver_version, query_type, server_hostname, waiting)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+    ON CONFLICT(db_query_id, db_transaction_id, server) DO UPDATE SET planning=excluded.planning;
 
 addEndRecord: |
   INSERT INTO query_execution(db_query_id, db_transaction_id, query_id, database, 
       db_id, authenticatedUser, executedUser, elapsedTimeMs, pageFaults, 
-      pageHits, planning, allocatedBytes, client, server, start_timeStamp, end_timeStamp, failed, stacktrace, lang_driver, driver_version, query_type, server_hostname)
-  VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-  ON CONFLICT(db_query_id, db_transaction_id) DO UPDATE 
+      pageHits, planning, allocatedBytes, client, server, start_timeStamp, end_timeStamp, failed, stacktrace, lang_driver, driver_version, query_type, server_hostname, waiting)
+  VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+  ON CONFLICT(db_query_id, db_transaction_id, server) DO UPDATE 
     SET end_timeStamp=excluded.end_timeStamp, 
         query_id=excluded.query_id, 
         elapsedTimeMs=excluded.elapsedTimeMs,

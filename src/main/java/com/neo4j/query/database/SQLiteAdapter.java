@@ -141,6 +141,7 @@ public class SQLiteAdapter implements IStorageAdapter {
             addStartRecordStmt.setString(19, record.driverVersion);
             addStartRecordStmt.setInt(20, record.queryType);
             addStartRecordStmt.setString(21, record.serverHostName);
+            addStartRecordStmt.setLong(22, record.waiting);
             addStartRecordStmt.executeUpdate() ;
             addStartRecordStmt.clearParameters();
             if( graphQLAnnotationStorage != null ) {
@@ -188,6 +189,7 @@ public class SQLiteAdapter implements IStorageAdapter {
             addEndRecordStmt.setString(20, record.driverVersion);
             addEndRecordStmt.setInt(21, record.queryType);
             addEndRecordStmt.setString(22, record.serverHostName);
+            addEndRecordStmt.setLong(23, record.waiting);
             addEndRecordStmt.executeUpdate() ;
             addEndRecordStmt.clearParameters();
             if( graphQLAnnotationStorage != null ) {
