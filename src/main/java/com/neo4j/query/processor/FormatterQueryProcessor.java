@@ -335,6 +335,7 @@ public class FormatterQueryProcessor implements QueryProcessor {
             return record;
         }catch (Exception e) {
             e.printStackTrace();
+            System.err.println("Query: " + query);
             return null ;
         }
     }

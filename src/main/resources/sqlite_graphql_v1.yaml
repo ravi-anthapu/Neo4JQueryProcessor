@@ -2,16 +2,6 @@ annotationType: graphql
 annotationClass: com.neo4j.query.database.SQLiteGraphQLStorageAdapterV1
 initQueries:
   - |
-    CREATE TABLE IF NOT EXISTS query_annotation (
-      graphql_query_id INTEGER,
-      query_id INTEGER,
-      annotation_params_id INTEGER,
-      PRIMARY KEY(graphql_query_id,query_id,annotation_params_id),
-      FOREIGN KEY (query_id) REFERENCES queries (id),
-      FOREIGN KEY (graphql_query_id) REFERENCES graplql_queries (id),
-      FOREIGN KEY (annotation_params_id) REFERENCES annotation_params (id)
-    )
-  - |
     CREATE TABLE IF NOT EXISTS annotation_params (
       id INTEGER PRIMARY KEY,
       params varchar(1000),
@@ -23,6 +13,16 @@ initQueries:
       app varchar(40),
       query varchar(8000) NOT NULL,
       UNIQUE(query, app)
+    )
+  - |
+    CREATE TABLE IF NOT EXISTS query_annotation (
+      graphql_query_id INTEGER,
+      query_id INTEGER,
+      annotation_params_id INTEGER,
+      PRIMARY KEY(graphql_query_id,query_id,annotation_params_id),
+      FOREIGN KEY (query_id) REFERENCES queries (id),
+      FOREIGN KEY (graphql_query_id) REFERENCES graplql_queries (id),
+      FOREIGN KEY (annotation_params_id) REFERENCES annotation_params (id)
     )
 
 addAnnotation: |
