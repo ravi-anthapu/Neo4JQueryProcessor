@@ -62,11 +62,11 @@ public class QueryAnalyzer {
 
             File dir = new File(queryDir);
             File[] directoryListing = dir.listFiles();
-            for( File f: directoryListing) {
-                if( pattern != null ) {
+            for (File f : directoryListing) {
+                if (pattern != null) {
                     String name = f.getName();
-                    Matcher matcher = pattern.matcher(name) ;
-                    if(!matcher.find()) {
+                    Matcher matcher = pattern.matcher(name);
+                    if (!matcher.find()) {
                         System.out.println("Ignoring file as does not match the filter : " + name);
                         continue;
                     }

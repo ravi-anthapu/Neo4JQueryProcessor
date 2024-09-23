@@ -28,6 +28,7 @@ public class SQLiteAdapter implements IStorageAdapter {
     private PreparedStatement addStartRecordStmt ;
     private PreparedStatement addEndRecordStmt ;
     private int dummyTransactionId = -1 ;
+    private int dummyQueryId = -1 ;
     private IGraphQLStorageAdapterV1 graphQLAnnotationStorage ;
 
     @Override
@@ -115,6 +116,8 @@ public class SQLiteAdapter implements IStorageAdapter {
                 record.dbTransactionId = dummyTransactionId-- ;
             } else if( record.dbQueryId == -1 && record.dbTransactionId == -1 ) {
                 record.dbTransactionId = dummyTransactionId-- ;
+            } else if ( record.dbTransactionId > 0 && record.dbQueryId == 0 ) {
+                record.dbQueryId = dummyQueryId-- ;
             }
             addStartRecordStmt.setLong(1,record.dbQueryId);
             addStartRecordStmt.setLong(2,record.dbTransactionId);
@@ -142,6 +145,7 @@ public class SQLiteAdapter implements IStorageAdapter {
             addStartRecordStmt.setInt(20, record.queryType);
             addStartRecordStmt.setString(21, record.serverHostName);
             addStartRecordStmt.setLong(22, record.waiting);
+            addStartRecordStmt.setLong(23, record.cpuTime);
             addStartRecordStmt.executeUpdate() ;
             addStartRecordStmt.clearParameters();
             if( graphQLAnnotationStorage != null ) {
@@ -161,7 +165,10 @@ public class SQLiteAdapter implements IStorageAdapter {
                 record.dbTransactionId = dummyTransactionId-- ;
             } else if( record.dbQueryId == -1 && record.dbTransactionId == -1 ) {
                 record.dbTransactionId = dummyTransactionId-- ;
+            } else if ( record.dbTransactionId > 0 && record.dbQueryId == 0 ) {
+                record.dbQueryId = dummyQueryId-- ;
             }
+
             addEndRecordStmt.setLong(1,record.dbQueryId);
             addEndRecordStmt.setLong(2,record.dbTransactionId);
             addEndRecordStmt.setLong(3,record.queryId);
@@ -190,6 +197,7 @@ public class SQLiteAdapter implements IStorageAdapter {
             addEndRecordStmt.setInt(21, record.queryType);
             addEndRecordStmt.setString(22, record.serverHostName);
             addEndRecordStmt.setLong(23, record.waiting);
+            addEndRecordStmt.setLong(24, record.cpuTime);
             addEndRecordStmt.executeUpdate() ;
             addEndRecordStmt.clearParameters();
             if( graphQLAnnotationStorage != null ) {

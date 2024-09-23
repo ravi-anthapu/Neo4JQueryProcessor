@@ -136,7 +136,7 @@ public class JSONLinesQueryProcessor implements QueryProcessor {
                 record.isStartRecord = false;
             }
 
-            record.dbQueryId = Long.valueOf(node.get("id").toString());
+            record.dbQueryId = node.get("id")!=null?Long.valueOf(node.get("id").toString()):0;
             Object o = node.get("transactionId") ;
             if( o != null ) {
                 record.dbTransactionId = Long.valueOf(o.toString());
