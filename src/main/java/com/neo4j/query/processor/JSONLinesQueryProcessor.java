@@ -105,7 +105,14 @@ public class JSONLinesQueryProcessor implements QueryProcessor {
 
             } else {
                 // This is the JSON format of query log downloaded by customers.
-                timestamp = node.get("time").toString().substring(0, 19).replace('T', ' ');
+//                timestamp = node.get("time").toString().substring(0, 19).replace('T', ' ');
+                if( node.containsKey("timestamp")) {
+                    // This is the Aura JSON log format that is exported by support.
+                    timestamp = node.get("timestamp").toString().substring(0, 19).replace('T', ' ');
+                } else if( node.containsKey("time")) {
+                    // This is the JSON format of query log downloaded by customers.
+                    timestamp = node.get("time").toString().substring(0, 19).replace('T', ' ');
+                }
             }
             Timestamp sts = Timestamp.valueOf(timestamp);
 
