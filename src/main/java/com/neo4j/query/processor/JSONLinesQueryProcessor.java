@@ -54,7 +54,7 @@ public class JSONLinesQueryProcessor implements QueryProcessor {
                 counter++ ;
 
                 QueryRecord record = readQueryLogEntry(data) ;
-                if( record != null ) {
+                if( record != null && record.query != null ) {
                     if (record.isStartRecord) {
                         storageAdapter.addQueryStart(record);
                     } else {
@@ -122,6 +122,11 @@ public class JSONLinesQueryProcessor implements QueryProcessor {
                     // We don't want this database query logs.
                     return  null ;
                 }
+            }
+
+            Object type = node.get("type") ;
+            if( type != null && type.equals("security")) {
+                return null ;
             }
 
             record = new QueryRecord();

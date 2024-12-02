@@ -98,17 +98,22 @@ public class QueryAnalyzer {
                         FileInputStream fis = new FileInputStream(f);
                         ZipInputStream zis = new ZipInputStream(fis) ;
                         ZipEntry currentEntry = null ;
+                        String curEntryName = null ;
                         while ( (currentEntry = zis.getNextEntry()) != null) {
                             if( zipFilePattern != null ) {
-                                String name = currentEntry.getName() ;
-                                Matcher matcher = zipFilePattern.matcher(name) ;
+                                curEntryName = currentEntry.getName() ;
+                                Matcher matcher = zipFilePattern.matcher(curEntryName) ;
                                 if(!matcher.find()) {
-                                    System.out.println("Ignoring file as does not match the filter : " + name);
+                                    System.out.println("Ignoring file as does not match the filter : " + curEntryName);
                                     continue;
                                 }
                             }
 
-                            processor.processFile(f.getAbsolutePath(), new CustomInputStream(zis));
+                            if( curEntryName.endsWith(".gz")) {
+                                processor.processFile(f.getAbsolutePath(), new GzipCompressorInputStream(new CustomInputStream(zis)));
+                            } else {
+                                processor.processFile(f.getAbsolutePath(), new CustomInputStream(zis));
+                            }
 //                            zis.closeEntry();
                         }
                     }
