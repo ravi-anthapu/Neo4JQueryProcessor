@@ -169,6 +169,8 @@ public class JSONLinesQueryProcessor implements QueryProcessor {
 
             tempKey = node.containsKey("pageFaults")?node.get("pageFaults"):node.get("pagefaults") ;
             record.pageFaults = (Integer)tempKey ;
+            tempKey = node.containsKey("cpu")?node.get("cpu"):0 ;
+            record.cpuTime = (Integer)tempKey ;
             tempKey = node.containsKey("pageHits")?node.get("pageHits"):node.get("pagehits") ;
             record.pageHits = (Integer)tempKey ;
             record.waiting = node.containsKey("waiting")?(Integer)node.get("waiting"):0;
