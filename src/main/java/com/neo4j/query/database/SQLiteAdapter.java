@@ -144,8 +144,9 @@ public class SQLiteAdapter implements IStorageAdapter {
             addStartRecordStmt.setString(19, record.driverVersion);
             addStartRecordStmt.setInt(20, record.queryType);
             addStartRecordStmt.setString(21, record.serverHostName);
-            addStartRecordStmt.setLong(22, record.waiting);
-            addStartRecordStmt.setLong(23, record.cpuTime);
+            addStartRecordStmt.setString(22, record.fileName);
+            addStartRecordStmt.setLong(23, record.waiting);
+            addStartRecordStmt.setLong(24, record.cpuTime);
             addStartRecordStmt.executeUpdate() ;
             addStartRecordStmt.clearParameters();
             if( graphQLAnnotationStorage != null ) {
@@ -196,8 +197,9 @@ public class SQLiteAdapter implements IStorageAdapter {
             addEndRecordStmt.setString(20, record.driverVersion);
             addEndRecordStmt.setInt(21, record.queryType);
             addEndRecordStmt.setString(22, record.serverHostName);
-            addEndRecordStmt.setLong(23, record.waiting);
-            addEndRecordStmt.setLong(24, record.cpuTime);
+            addEndRecordStmt.setString(23, record.fileName);
+            addEndRecordStmt.setLong(24, record.waiting);
+            addEndRecordStmt.setLong(25, record.cpuTime);
             addEndRecordStmt.executeUpdate() ;
             addEndRecordStmt.clearParameters();
             if( graphQLAnnotationStorage != null ) {

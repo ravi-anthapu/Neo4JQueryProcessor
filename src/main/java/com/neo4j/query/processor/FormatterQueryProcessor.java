@@ -25,7 +25,7 @@ public class FormatterQueryProcessor implements QueryProcessor {
     }
 
     @Override
-    public void processFile(String fileName, InputStream is) {
+    public void processFile(String fileName, InputStream is, String name) {
         try {
             mapper.configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
             mapper.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
@@ -46,6 +46,7 @@ public class FormatterQueryProcessor implements QueryProcessor {
                     if( query.length() > 0 ) {
                         QueryRecord record = readQueryLogEntry(query.toString());
                         if (record != null) {
+                            record.fileName = name ;
                             if (record.isStartRecord) {
                                 storageAdapter.addQueryStart(record);
                             } else {
@@ -69,6 +70,7 @@ public class FormatterQueryProcessor implements QueryProcessor {
             if( query.length() > 0 ) {
                 QueryRecord record = readQueryLogEntry(query.toString()) ;
                 if( record != null ) {
+                    record.fileName = name ;
                     if (record.isStartRecord) {
                         storageAdapter.addQueryStart(record);
                     } else {
@@ -226,7 +228,7 @@ public class FormatterQueryProcessor implements QueryProcessor {
             // Process Page Hits and Page Faults
             curPart++;
             current = splitData[curPart].trim();
-            if (!current.startsWith("embedded-session") && !current.startsWith("bolt-session") ) {
+            if (!current.startsWith("embedded-session") && !current.startsWith("bolt-session") && !current.startsWith("server-session")) {
                 index = current.indexOf(' ');
                 record.pageHits = Long.valueOf(current.substring(0, index));
                 index = current.indexOf(',');
@@ -257,6 +259,10 @@ public class FormatterQueryProcessor implements QueryProcessor {
                     }
                     record.client = getKeyValue(tokens.nextToken(), "client/", ':');
                     record.server = getKeyValue(tokens.nextToken(), "server/", ':');
+                } else if (session.equals("server-session")) {
+                    record.driver = "http" ;
+                    tokens.nextToken();
+                    record.client = tokens.nextToken();
                 } else {
                     System.out.println("Unknown Session : " + current);
                 }

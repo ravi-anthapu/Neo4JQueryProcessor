@@ -8,7 +8,7 @@ import java.util.Map;
 
 public interface QueryProcessor {
     public void initialize(Map<String, Object> configuration, IStorageAdapter storageAdapter) ;
-    public void processFile(String fileName, InputStream is) ;
+    public void processFile(String fileName, InputStream is, String name) ;
 
     public void finishProcesing() ;
 }

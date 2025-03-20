@@ -28,7 +28,7 @@ public class JSONLinesQueryProcessor implements QueryProcessor {
     }
 
     @Override
-    public void processFile(String fileName, InputStream is) {
+    public void processFile(String fileName, InputStream is, String name) {
         try {
             System.out.println("Processing File : " + fileName);
             int counter = 0 ;
@@ -55,6 +55,7 @@ public class JSONLinesQueryProcessor implements QueryProcessor {
 
                 QueryRecord record = readQueryLogEntry(data) ;
                 if( record != null && record.query != null ) {
+                    record.fileName = name ;
                     if (record.isStartRecord) {
                         storageAdapter.addQueryStart(record);
                     } else {
@@ -212,6 +213,10 @@ public class JSONLinesQueryProcessor implements QueryProcessor {
 
                         record.client = getKeyValue(tokens.nextToken(), "client/", ':') ;
                         record.server = getKeyValue(tokens.nextToken(), "server/", ':') ;
+                    } else if (session.equals("server-session")) {
+                        record.driver = "http" ;
+                        tokens.nextToken();
+                        record.client = tokens.nextToken();
                     } else {
                         System.out.println("Unknown Session : " + txt);
                     }

@@ -34,7 +34,7 @@ public class AuraJSONQueryProcessor implements QueryProcessor {
     }
 
     @Override
-    public void processFile(String fileName, InputStream is) {
+    public void processFile(String fileName, InputStream is, String name) {
         try {
             System.out.println("Processing File : " + fileName);
             JsonFactory f = new MappingJsonFactory();
@@ -59,6 +59,7 @@ public class AuraJSONQueryProcessor implements QueryProcessor {
                     JsonNode node = jp.readValueAsTree();
                     QueryRecord record = readQueryLogEntry(node) ;
                     if( record != null ) {
+                        record.fileName = name ;
                         if (record.isStartRecord) {
                             storageAdapter.addQueryStart(record);
                         } else {
@@ -178,6 +179,10 @@ public class AuraJSONQueryProcessor implements QueryProcessor {
 //                            String serverTxt = tokens.nextToken() ;
                             record.client = getKeyValue(tokens.nextToken(), "client/", ':') ;
                             record.server = getKeyValue(tokens.nextToken(), "server/", ':') ;
+                        } else if (session.equals("server-session")) {
+                            record.driver = "http" ;
+                            tokens.nextToken();
+                            record.client = tokens.nextToken();
                         } else {
                             System.out.println("Unknown Session : " + txt);
                         }

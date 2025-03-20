@@ -70,7 +70,7 @@ SELECT server,
         sum(elapsedtimems) as totalTime, 
         sum(planning) as planning, 
         sum(cputime) as cpuTime, 
-        sum(waiting) as waiting
+        sum(waiting) as waiting,
         sum(pagehits) as pagehits, 
         sum(pagefaults) as pagefaults 
 from query_execution GROUP by server, time

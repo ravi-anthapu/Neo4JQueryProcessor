@@ -74,7 +74,7 @@ public class QueryAnalyzer {
 
                 try {
                     if (fileType == null || fileType.equals("file")) {
-                        processor.processFile(f.getAbsolutePath(), new FileInputStream(f));
+                        processor.processFile(f.getAbsolutePath(), new FileInputStream(f), f.getName());
                     } else if (fileType.equals("tgz")) {
                         FileInputStream fis = new FileInputStream(f);
                         TarArchiveInputStream tarInput =
@@ -82,13 +82,13 @@ public class QueryAnalyzer {
                                         new GzipCompressorInputStream(fis));
                         TarArchiveEntry currentEntry = tarInput.getNextTarEntry();
                         while (currentEntry != null) {
-                            processor.processFile(f.getAbsolutePath(), tarInput);
+                            processor.processFile(f.getAbsolutePath(), tarInput, f.getName());
                             currentEntry = tarInput.getNextTarEntry();
                         }
                     } else if (fileType.equals("gzip")) {
                         FileInputStream fis = new FileInputStream(f);
                         GzipCompressorInputStream gfis = new GzipCompressorInputStream(fis) ;
-                        processor.processFile(f.getAbsolutePath(), gfis);
+                        processor.processFile(f.getAbsolutePath(), gfis, f.getName());
                     } else if (fileType.equals("zip")) {
                         Pattern zipFilePattern = null ;
                         if( configuration.containsKey("zipFileNameFilter")) {
@@ -110,9 +110,9 @@ public class QueryAnalyzer {
                             }
 
                             if( curEntryName.endsWith(".gz")) {
-                                processor.processFile(f.getAbsolutePath(), new GzipCompressorInputStream(new CustomInputStream(zis)));
+                                processor.processFile(f.getAbsolutePath(), new GzipCompressorInputStream(new CustomInputStream(zis)), f.getName());
                             } else {
-                                processor.processFile(f.getAbsolutePath(), new CustomInputStream(zis));
+                                processor.processFile(f.getAbsolutePath(), new CustomInputStream(zis), f.getName());
                             }
 //                            zis.closeEntry();
                         }

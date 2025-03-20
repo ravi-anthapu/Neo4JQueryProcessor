@@ -34,4 +34,5 @@ public class QueryRecord {
     public Map<String, Object> annotationData ;
 
     public String serverHostName ;
+    public String fileName ;
 }
