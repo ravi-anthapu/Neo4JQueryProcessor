@@ -153,6 +153,10 @@ public class FormatterQueryProcessor implements QueryProcessor {
                         s = getKeyValue(current, "transaction id:", ' ');
                         if (s != null) {
                             record.dbTransactionId = Long.valueOf(s.trim());
+                            if( record.dbTransactionId == -1 ) {
+                                // Ignore this record as this request is forwarded to another server using SSR
+                                return null ;
+                            }
                         } else {
                             record.dbTransactionId = -1;
                         }
@@ -171,6 +175,10 @@ public class FormatterQueryProcessor implements QueryProcessor {
                         s = getKeyValue(current, "transaction id:", ' ');
                         if (s != null) {
                             record.dbTransactionId = Long.valueOf(s.trim());
+                            if( record.dbTransactionId == -1 ) {
+                                // Ignore this record as this request is forwarded to another server using SSR
+                                return null ;
+                            }
                         } else {
                             record.dbTransactionId = -1;
                         }

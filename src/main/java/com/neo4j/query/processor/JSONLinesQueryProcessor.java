@@ -137,15 +137,20 @@ public class JSONLinesQueryProcessor implements QueryProcessor {
 
             readAnnotationData(record, node) ;
 
-            String event = node.get("event").toString();
-            if( event.equalsIgnoreCase("fail")) {
-                record.failed = 1 ;
-                record.stackTrace = node.containsKey("stacktrace")?node.get("stacktrace").toString():null ;
-            }
+            if( node.get("event") != null ) {
+                String event = node.get("event").toString();
+                if (event.equalsIgnoreCase("fail")) {
+                    record.failed = 1;
+                    record.stackTrace = node.containsKey("stacktrace") ? node.get("stacktrace").toString() : null;
+                }
 
-            if (event.equalsIgnoreCase("start")) {
-                record.isStartRecord = true;
+                if (event.equalsIgnoreCase("start")) {
+                    record.isStartRecord = true;
+                } else {
+                    record.isStartRecord = false;
+                }
             } else {
+                // We may not have the event in filtered data.
                 record.isStartRecord = false;
             }
 
@@ -153,10 +158,18 @@ public class JSONLinesQueryProcessor implements QueryProcessor {
             Object o = node.get("transactionId") ;
             if( o != null ) {
                 record.dbTransactionId = Long.valueOf(o.toString());
+                if( record.dbTransactionId == -1 ) {
+                    // Ignore this record as this request is forwarded to another server using SSR
+                    return null ;
+                }
             } else {
                 o = node.get("transactionid") ;
                 if( o != null ) {
                     record.dbTransactionId = Long.valueOf(o.toString());
+                    if( record.dbTransactionId == -1 ) {
+                        // Ignore this record as this request is forwarded to another server using SSR
+                        return null ;
+                    }
                 }
             }
 
@@ -179,9 +192,9 @@ public class JSONLinesQueryProcessor implements QueryProcessor {
             record.allocatedBytes = Long.valueOf(tempKey.toString());
             record.dabtabase = node.get("database").toString();
             tempKey = node.containsKey("authenticatedUser")?node.get("authenticatedUser"):node.get("authenticateduser") ;
-            record.authenticatedUser = tempKey.toString();
+            record.authenticatedUser = tempKey==null?"":tempKey.toString();
             tempKey = node.containsKey("executingUser")?node.get("executingUser"):node.get("executinguser") ;
-            record.executedUser = tempKey.toString();
+            record.executedUser = tempKey==null?"":tempKey.toString();
             record.query = node.containsKey("query")?cleanQuery(node.get("query").toString()):"";
             o = node.get("runtime");
             if (o != null) {
