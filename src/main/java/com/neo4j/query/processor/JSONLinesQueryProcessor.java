@@ -77,19 +77,23 @@ public class JSONLinesQueryProcessor implements QueryProcessor {
             String timestamp = null ;
             String serverName = null ;
             if( serverHostNameKeys != null ) {
-                String[] keysSequence = serverHostNameKeys.split("::") ;
-                Map<String, Object> curMap = node ;
-                for( int i = 0 ; i < keysSequence.length-1 ; i++ ) {
-                    if( curMap != null && curMap.containsKey(keysSequence[i])) {
-                        curMap = (Map<String, Object>) curMap.get(keysSequence[i]) ;
-                    } else {
-                        curMap = null ;
+                if( serverHostNameKeys.contains("::")) {
+                    String[] keysSequence = serverHostNameKeys.split("::");
+                    Map<String, Object> curMap = node;
+                    for (int i = 0; i < keysSequence.length - 1; i++) {
+                        if (curMap != null && curMap.containsKey(keysSequence[i])) {
+                            curMap = (Map<String, Object>) curMap.get(keysSequence[i]);
+                        } else {
+                            curMap = null;
+                        }
                     }
-                }
-                if( curMap != null ) {
-                    if( curMap.containsKey(keysSequence[keysSequence.length-1])) {
-                        serverName = curMap.get(keysSequence[keysSequence.length-1]).toString() ;
+                    if (curMap != null) {
+                        if (curMap.containsKey(keysSequence[keysSequence.length - 1])) {
+                            serverName = curMap.get(keysSequence[keysSequence.length - 1]).toString();
+                        }
                     }
+                } else {
+                    serverName = node.get(serverHostNameKeys).toString();
                 }
             }
             if( node.containsKey("jsonPayload")) {

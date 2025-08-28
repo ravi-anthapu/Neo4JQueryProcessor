@@ -89,8 +89,12 @@ public class FormatterQueryProcessor implements QueryProcessor {
         String[] splitData = query.split(" - ");
         String s = null;
         int curPart = 0;
+        boolean error = false;
 
         try {
+            if( query.contains(" ERROR ")) {
+                error = true ;
+            }
             record.timeStamp = Timestamp.valueOf(splitData[0].substring(0, 19).replace('T', ' '));
 
             String current = splitData[curPart];
@@ -153,8 +157,8 @@ public class FormatterQueryProcessor implements QueryProcessor {
                         s = getKeyValue(current, "transaction id:", ' ');
                         if (s != null) {
                             record.dbTransactionId = Long.valueOf(s.trim());
-                            if( record.dbTransactionId == -1 ) {
-                                // Ignore this record as this request is forwarded to another server using SSR
+                            if( record.dbTransactionId == -1 && !error ) {
+                                // Ignore this record as this request is forwarded to another server using SSR and not an error.
                                 return null ;
                             }
                         } else {
