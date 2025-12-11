@@ -271,6 +271,9 @@ public class FormatterQueryProcessor implements QueryProcessor {
                     }
                     record.client = getKeyValue(tokens.nextToken(), "client/", ':');
                     record.server = getKeyValue(tokens.nextToken(), "server/", ':');
+                    if( tokens.hasMoreTokens()) {
+                        record.dabtabase = tokens.nextToken() ;
+                    }
                 } else if (session.equals("server-session")) {
                     record.driver = "http" ;
                     tokens.nextToken();
